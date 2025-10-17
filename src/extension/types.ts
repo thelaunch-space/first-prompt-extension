@@ -35,6 +35,7 @@ export type Step = 1 | 2 | 3 | 4 | 5 | 6 | 'preview';
 export interface ProjectTypeOption {
   value: string;
   label: string;
+  description: string;
 }
 
 export interface DesignStyleOption {

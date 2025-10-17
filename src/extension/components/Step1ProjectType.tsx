@@ -13,19 +13,39 @@ interface Step1Props {
 }
 
 const PROJECT_TYPES: ProjectTypeOption[] = [
-  { value: 'chrome-extension', label: 'Chrome Extension' },
-  { value: 'micro-saas', label: 'Micro-SaaS App' },
-  { value: 'mobile-app', label: 'Mobile App' },
-  { value: 'landing', label: 'Landing Page' },
-  { value: 'other', label: 'Other' },
+  {
+    value: 'web-app',
+    label: 'Web App',
+    description: 'Most popular - General purpose web applications, SaaS products, dashboards'
+  },
+  {
+    value: 'chrome-extension',
+    label: 'Chrome Extension',
+    description: 'Browser tools that enhance or modify web pages'
+  },
+  {
+    value: 'mobile-app',
+    label: 'Mobile App',
+    description: 'iOS and Android applications built with Expo'
+  },
+  {
+    value: 'landing',
+    label: 'Landing Page',
+    description: 'Marketing pages, product showcases, lead generation sites'
+  },
+  {
+    value: 'other',
+    label: 'Other',
+    description: 'Something unique - describe it in your own words'
+  },
 ];
 
 const getProjectIcon = (value: string) => {
   switch (value) {
+    case 'web-app':
+      return <Layers size={24} />;
     case 'chrome-extension':
       return <Chrome size={24} />;
-    case 'micro-saas':
-      return <Layers size={24} />;
     case 'mobile-app':
       return <Smartphone size={24} />;
     case 'landing':
@@ -58,18 +78,21 @@ export const Step1ProjectType: React.FC<Step1Props> = ({
           <button
             key={type.value}
             onClick={() => onSelectType(type.value)}
-            className={`group w-full p-4 rounded-xl border-2 text-left transition-all duration-300 flex items-center gap-4 ${
+            className={`group w-full p-4 rounded-xl border-2 text-left transition-all duration-300 flex items-start gap-4 ${
               selectedType === type.value
                 ? 'border-blue-500 bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-white shadow-lg shadow-blue-500/20'
                 : 'border-slate-700 bg-slate-800/50 text-gray-300 hover:border-slate-600 hover:bg-slate-800 hover:shadow-md hover:scale-[1.02]'
             }`}
           >
-            <div className={`transition-colors duration-300 ${
+            <div className={`transition-colors duration-300 mt-0.5 flex-shrink-0 ${
               selectedType === type.value ? 'text-blue-400' : 'text-gray-500 group-hover:text-gray-400'
             }`}>
               {getProjectIcon(type.value)}
             </div>
-            <span className="font-medium">{type.label}</span>
+            <div className="flex-1 min-w-0">
+              <div className="font-medium mb-1">{type.label}</div>
+              <div className="text-sm text-gray-500 leading-snug">{type.description}</div>
+            </div>
           </button>
         ))}
       </div>

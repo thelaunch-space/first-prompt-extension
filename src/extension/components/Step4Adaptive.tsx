@@ -110,7 +110,7 @@ export const Step5Adaptive: React.FC<Step5Props> = ({
           </>
         );
 
-      case 'micro-saas':
+      case 'web-app':
         return (
           <>
             <div className="mb-6">
