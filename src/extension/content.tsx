@@ -133,8 +133,8 @@ class BoltPromptGenerator {
       (img as HTMLImageElement).style.transform = 'scale(1)';
     }
 
-    this.button.style.padding = '14px 24px';
-    this.button.style.borderRadius = '12px';
+    this.button.style.padding = '12px 20px';
+    this.button.style.borderRadius = '10px';
     this.button.style.width = 'auto';
     this.button.style.height = 'auto';
     this.button.style.bottom = '24px';
@@ -181,10 +181,10 @@ class BoltPromptGenerator {
     this.button.title = 'Generate Prompt';
 
     // Get the custom icon URL from the extension
-    const iconUrl = chrome.runtime.getURL('icon32.png');
+    const iconUrl = chrome.runtime.getURL('icon128.png');
 
     this.button.innerHTML = `
-      <img src="${iconUrl}" width="32" height="32" style="transition: transform 0.3s ease; flex-shrink: 0;" alt="Bolt Prompt Generator" />
+      <img src="${iconUrl}" width="26" height="26" style="transition: transform 0.3s ease; flex-shrink: 0;" alt="Bolt Prompt Generator" />
       <span style="transition: opacity 0.3s ease, width 0.3s ease; font-weight: 600; letter-spacing: -0.01em;">
         Generate First <span style="background: linear-gradient(135deg, #ffffff 0%, #A78BFA 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700;">Prompt</span>
       </span>
@@ -200,14 +200,14 @@ class BoltPromptGenerator {
       align-items: center;
       justify-content: center;
       gap: 10px;
-      padding: ${isCompact ? '12px 10px' : '14px 24px'};
+      padding: ${isCompact ? '12px 10px' : '12px 20px'};
       background: linear-gradient(135deg, #1E293B 0%, #334155 100%);
       color: white;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 14px;
       font-weight: 600;
       border: none;
-      border-radius: ${isCompact ? '0 8px 8px 0' : '12px'};
+      border-radius: ${isCompact ? '0 8px 8px 0' : '10px'};
       cursor: pointer;
       box-shadow: ${isCompact ? '0 4px 16px rgba(0, 0, 0, 0.25)' : '0 10px 30px rgba(0, 0, 0, 0.3)'};
       transition: ${isCompact ? 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease' : 'all 0.3s ease'};
