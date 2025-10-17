@@ -184,7 +184,7 @@ class BoltPromptGenerator {
     const iconUrl = chrome.runtime.getURL('icon128.png');
 
     this.button.innerHTML = `
-      <img src="${iconUrl}" width="26" height="26" style="transition: transform 0.3s ease; flex-shrink: 0;" alt="Bolt Prompt Generator" />
+      <img src="${iconUrl}" width="44" height="44" style="transition: transform 0.3s ease; flex-shrink: 0;" alt="Bolt Prompt Generator" />
       <span style="transition: opacity 0.3s ease, width 0.3s ease; font-weight: 600; letter-spacing: -0.01em;">
         Generate First <span style="background: linear-gradient(135deg, #ffffff 0%, #A78BFA 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700;">Prompt</span>
       </span>
