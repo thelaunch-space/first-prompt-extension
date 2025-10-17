@@ -105,9 +105,9 @@ class BoltPromptGenerator {
     this.button.style.right = 'auto';
     this.button.style.transition = 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease';
 
-    const svg = this.button.querySelector('svg');
-    if (svg) {
-      svg.style.transform = 'scale(1.1)';
+    const img = this.button.querySelector('img');
+    if (img) {
+      (img as HTMLImageElement).style.transform = 'scale(1.1)';
     }
 
     this.enableEdgeHover();
@@ -128,9 +128,9 @@ class BoltPromptGenerator {
       span.style.overflow = 'visible';
     }
 
-    const svg = this.button.querySelector('svg');
-    if (svg) {
-      svg.style.transform = 'scale(1)';
+    const img = this.button.querySelector('img');
+    if (img) {
+      (img as HTMLImageElement).style.transform = 'scale(1)';
     }
 
     this.button.style.padding = '12px 24px';
@@ -179,10 +179,12 @@ class BoltPromptGenerator {
     this.button = document.createElement('button');
     this.button.id = 'bolt-prompt-generator-btn';
     this.button.title = 'Generate Prompt';
+
+    // Get the custom icon URL from the extension
+    const iconUrl = chrome.runtime.getURL('icon32.png');
+
     this.button.innerHTML = `
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transition: transform 0.3s ease;">
-        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-      </svg>
+      <img src="${iconUrl}" width="22" height="22" style="transition: transform 0.3s ease; flex-shrink: 0;" alt="Bolt Prompt Generator" />
       <span style="transition: opacity 0.3s ease, width 0.3s ease; font-weight: 600; letter-spacing: -0.01em;">
         Generate First <span style="background: linear-gradient(135deg, #ffffff 0%, #60A5FA 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700;">Prompt</span>
       </span>
@@ -219,9 +221,9 @@ class BoltPromptGenerator {
         span.style.width = '0';
         span.style.overflow = 'hidden';
       }
-      const svg = this.button.querySelector('svg');
-      if (svg instanceof SVGElement) {
-        svg.style.transform = 'scale(1.1)';
+      const img = this.button.querySelector('img');
+      if (img instanceof HTMLImageElement) {
+        img.style.transform = 'scale(1.1)';
       }
       this.enableEdgeHover();
       this.button.addEventListener('click', () => {

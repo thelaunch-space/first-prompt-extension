@@ -273,9 +273,15 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
     }
   };
 
+  const iconUrl = chrome.runtime.getURL('icon48.png');
+
   return (
     <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="relative w-full max-w-[600px] bg-slate-900 rounded-2xl shadow-2xl border border-slate-800 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-center pt-6 pb-2">
+          <img src={iconUrl} alt="Bolt Prompt Generator" className="w-12 h-12" />
+        </div>
+
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-10 p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"

@@ -3,7 +3,6 @@
 // No fixed duration - adapts to actual API response time
 
 import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
 
 interface LoadingScreenProps {
   onComplete?: boolean; // Signal from parent that API has responded
@@ -44,6 +43,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete = false
   const [startTime] = useState(Date.now());
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [isCompleting, setIsCompleting] = useState(false);
+  const iconUrl = chrome.runtime.getURL('icon48.png');
 
   useEffect(() => {
     if (onComplete && !isCompleting) {
@@ -106,7 +106,9 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete = false
   return (
     <div className="p-8 flex flex-col items-center justify-center min-h-[500px]">
       <div className="relative mb-8">
-        <Loader2 className="text-blue-400 animate-spin" size={64} />
+        <div className="relative w-16 h-16 animate-pulse">
+          <img src={iconUrl} alt="Loading" className="w-16 h-16" />
+        </div>
         <div className="absolute inset-0 bg-blue-400/20 rounded-full blur-xl animate-pulse" />
       </div>
 

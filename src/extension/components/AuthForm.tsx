@@ -14,6 +14,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticated, onError }) 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const iconUrl = chrome.runtime.getURL('icon48.png');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,10 +45,14 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticated, onError }) 
 
   return (
     <div className="p-8">
-      <h2 className="text-2xl font-bold text-white mb-2">
+      <div className="flex justify-center mb-4">
+        <img src={iconUrl} alt="Bolt Prompt Generator" className="w-16 h-16" />
+      </div>
+
+      <h2 className="text-2xl font-bold text-white mb-2 text-center">
         {isLogin ? 'Welcome Back' : 'Get Started'}
       </h2>
-      <p className="text-gray-400 mb-6">
+      <p className="text-gray-400 mb-6 text-center">
         {isLogin
           ? 'Sign in to generate optimized Bolt.new prompts'
           : 'Create an account to start generating prompts'}

@@ -150,7 +150,7 @@ type Step = 1 | 2 | 3 | 4 | 5 | 6 | 'preview';
 1. Vite bundles content script in extension mode
 2. `scripts/build-extension.js` post-build script:
    - Copies `public/manifest.json` to `dist/`
-   - Generates placeholder SVG icons (16, 48, 128) as PNG files
+   - Copies custom brand PNG icons (16, 32, 48, 128) from `public/` to `dist/`
 3. Manifest references `style.css` but build outputs `content.css` (known discrepancy)
 
 ### Authentication Flow
@@ -262,7 +262,7 @@ The button has two modes that adapt to user context:
 - Position: bottom-right (24px from edges)
 - Size: Auto width with text visible
 - Text: "Generate First Prompt" with gradient
-- Icon: Lightning bolt (zap)
+- Icon: Custom brand icon (icon32.png) loaded via chrome.runtime.getURL()
 - Triggers when: Page is empty (no prompt entered)
 
 **Compact Mode (After Prompt Entry):**
@@ -270,6 +270,7 @@ The button has two modes that adapt to user context:
 - Size: 40px × 48px (icon only)
 - Hidden state: left: -32px (8px visible)
 - Hover state: left: 0px (fully visible)
+- Icon: Same custom brand icon scaled to fit
 - Triggers when: User enters text in any textarea
 - Transitions: Smooth cubic-bezier animations
 
@@ -330,6 +331,29 @@ The button has two modes that adapt to user context:
 - Update CSS transitions and animations in `injectButton()`
 - Change trigger conditions in `checkForPromptInput()`
 
+### Custom Icon Usage Strategy
+The extension uses custom brand icons (blue-to-purple gradient) throughout for consistent branding:
+
+**Icon Sizes and Purposes:**
+- `icon16.png`: Browser toolbar and notifications
+- `icon32.png`: Injected button on bolt.new pages (content.tsx)
+- `icon48.png`: Modal headers (ModalContainer, AuthForm, LoadingScreen)
+- `icon128.png`: Chrome Web Store listing and extension management
+
+**Loading Icons from Components:**
+```typescript
+const iconUrl = chrome.runtime.getURL('icon48.png');
+<img src={iconUrl} alt="Bolt Prompt Generator" />
+```
+
+**Web Accessible Resources:**
+All icons are included in manifest.json's web_accessible_resources to enable content script access.
+
+**Brand Consistency:**
+- Icons follow the extension's gradient design language (blue #3B82F6 to purple #8B5CF6)
+- Displayed in key user touchpoints: button, auth, loading, and modal header
+- Replaces generic Lucide icons for stronger brand identity
+
 ### Debugging Extension Issues
 1. Check browser console (F12) on bolt.new page
 2. Verify extension is enabled in `chrome://extensions/`
@@ -363,9 +387,11 @@ Modal is completely isolated from bolt.new's DOM:
 - Fixed positioning with backdrop blur
 - Self-contained styling (no conflicts with bolt.new styles)
 - Portal pattern ensures clean unmounting
+- Custom brand icon (icon48.png) displayed in modal header for consistent branding
 
 ### Loading Experience (Adaptive Algorithm)
 - **LoadingScreen** uses an adaptive progress algorithm that syncs with actual API response time
+- **Custom Brand Icon**: Displays pulsing icon48.png instead of generic spinner for brand consistency
 - **No Fixed Duration**: Progress is calculated based on elapsed time using logarithmic curve
 - **Progress Zones**:
   - 0-3s: Fast (0% → 50%) - responsive for quick generations
@@ -391,9 +417,9 @@ src/extension/
   ├── api.ts                   # API client for edge function calls
   ├── types.ts                 # TypeScript interfaces
   └── components/
-      ├── ModalContainer.tsx   # Main orchestrator, state management
-      ├── AuthForm.tsx         # Authentication UI
-      ├── LoadingScreen.tsx    # Generation loading UI
+      ├── ModalContainer.tsx   # Main orchestrator, state management (displays icon48.png)
+      ├── AuthForm.tsx         # Authentication UI (displays icon48.png)
+      ├── LoadingScreen.tsx    # Generation loading UI (displays icon48.png)
       ├── Step[1-6]*.tsx       # Questionnaire steps
       └── PromptPreview.tsx    # Final prompt display and actions
 
@@ -406,7 +432,7 @@ supabase/
 
 public/
   ├── manifest.json           # Chrome extension manifest
-  └── icon*.png              # Extension icons
+  └── icon*.png              # Custom brand icons (16, 32, 48, 128)
 
 scripts/
   └── build-extension.js     # Post-build script for extension

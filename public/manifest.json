@@ -18,7 +18,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["modal.html"],
+      "resources": ["modal.html", "icon16.png", "icon32.png", "icon48.png", "icon128.png"],
       "matches": ["https://bolt.new/*"]
     }
   ],
