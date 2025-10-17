@@ -92,13 +92,13 @@ class BoltPromptGenerator {
       span.style.overflow = 'hidden';
     }
 
-    this.button.style.padding = '10px 8px';
+    this.button.style.padding = '12px 10px';
     this.button.style.borderRadius = '0 8px 8px 0';
-    this.button.style.width = '40px';
-    this.button.style.height = '48px';
+    this.button.style.width = '52px';
+    this.button.style.height = '56px';
     this.button.style.justifyContent = 'center';
     this.button.style.cursor = 'pointer';
-    this.button.style.left = '-32px';
+    this.button.style.left = '-40px';
     this.button.style.top = '50%';
     this.button.style.transform = 'translateY(-50%)';
     this.button.style.bottom = 'auto';
@@ -133,7 +133,7 @@ class BoltPromptGenerator {
       (img as HTMLImageElement).style.transform = 'scale(1)';
     }
 
-    this.button.style.padding = '12px 24px';
+    this.button.style.padding = '14px 24px';
     this.button.style.borderRadius = '12px';
     this.button.style.width = 'auto';
     this.button.style.height = 'auto';
@@ -163,13 +163,13 @@ class BoltPromptGenerator {
   private handleEdgeHover = () => {
     if (!this.button || this.buttonMode !== 'compact') return;
     this.button.style.left = '0px';
-    this.button.style.boxShadow = '0 8px 24px rgba(59, 130, 246, 0.4)';
+    this.button.style.boxShadow = '0 8px 28px rgba(0, 0, 0, 0.35)';
   };
 
   private handleEdgeLeave = () => {
     if (!this.button || this.buttonMode !== 'compact') return;
-    this.button.style.left = '-32px';
-    this.button.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
+    this.button.style.left = '-40px';
+    this.button.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.25)';
   };
 
 
@@ -184,9 +184,9 @@ class BoltPromptGenerator {
     const iconUrl = chrome.runtime.getURL('icon32.png');
 
     this.button.innerHTML = `
-      <img src="${iconUrl}" width="22" height="22" style="transition: transform 0.3s ease; flex-shrink: 0;" alt="Bolt Prompt Generator" />
+      <img src="${iconUrl}" width="32" height="32" style="transition: transform 0.3s ease; flex-shrink: 0;" alt="Bolt Prompt Generator" />
       <span style="transition: opacity 0.3s ease, width 0.3s ease; font-weight: 600; letter-spacing: -0.01em;">
-        Generate First <span style="background: linear-gradient(135deg, #ffffff 0%, #60A5FA 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700;">Prompt</span>
+        Generate First <span style="background: linear-gradient(135deg, #ffffff 0%, #A78BFA 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700;">Prompt</span>
       </span>
     `;
 
@@ -194,14 +194,14 @@ class BoltPromptGenerator {
 
     this.button.style.cssText = `
       position: fixed;
-      ${isCompact ? 'left: -32px; top: 50%; transform: translateY(-50%);' : 'bottom: 24px; right: 24px;'}
+      ${isCompact ? 'left: -40px; top: 50%; transform: translateY(-50%);' : 'bottom: 24px; right: 24px;'}
       z-index: 999998;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      padding: ${isCompact ? '10px 8px' : '12px 24px'};
-      background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+      gap: 10px;
+      padding: ${isCompact ? '12px 10px' : '14px 24px'};
+      background: linear-gradient(135deg, #1E293B 0%, #334155 100%);
       color: white;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 14px;
@@ -209,9 +209,9 @@ class BoltPromptGenerator {
       border: none;
       border-radius: ${isCompact ? '0 8px 8px 0' : '12px'};
       cursor: pointer;
-      box-shadow: ${isCompact ? '0 4px 12px rgba(59, 130, 246, 0.3)' : '0 10px 25px rgba(59, 130, 246, 0.3)'};
+      box-shadow: ${isCompact ? '0 4px 16px rgba(0, 0, 0, 0.25)' : '0 10px 30px rgba(0, 0, 0, 0.3)'};
       transition: ${isCompact ? 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease' : 'all 0.3s ease'};
-      ${isCompact ? 'width: 40px; height: 48px;' : ''}
+      ${isCompact ? 'width: 52px; height: 56px;' : ''}
     `;
 
     if (isCompact) {
@@ -233,14 +233,14 @@ class BoltPromptGenerator {
       this.button.addEventListener('mouseenter', () => {
         if (this.button && this.buttonMode === 'full') {
           this.button.style.transform = 'translateY(-2px)';
-          this.button.style.boxShadow = '0 15px 35px rgba(59, 130, 246, 0.4)';
+          this.button.style.boxShadow = '0 15px 40px rgba(0, 0, 0, 0.4)';
         }
       });
 
       this.button.addEventListener('mouseleave', () => {
         if (this.button && this.buttonMode === 'full') {
           this.button.style.transform = 'translateY(0)';
-          this.button.style.boxShadow = '0 10px 25px rgba(59, 130, 246, 0.3)';
+          this.button.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
         }
       });
 
