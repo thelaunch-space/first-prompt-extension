@@ -62,7 +62,7 @@ OPENROUTER_API_KEY=sk-or-v1-...
 content.tsx (BoltPromptGenerator)
   └── ModalContainer.tsx (Main orchestrator)
       ├── AuthForm.tsx (Signup/login)
-      ├── LoadingScreen.tsx (Shown during generation with 13.5s minimum)
+      ├── LoadingScreen.tsx (Adaptive progress - syncs with API response time)
       └── Questionnaire steps:
           ├── Step1ProjectType.tsx
           ├── Step2Audience.tsx
@@ -165,15 +165,25 @@ type Step = 1 | 2 | 3 | 4 | 5 | 6 | 'preview';
 
 ### Prompt Generation Flow
 1. User completes 6 steps → data collected in `QuestionnaireData` interface
-2. Click "Generate" → Shows `LoadingScreen` component
-3. Minimum 13.5 second loading time enforced (Promise.all with timer)
+2. Click "Generate" → Shows `LoadingScreen` component with adaptive progress
+3. LoadingScreen displays smooth, time-based progress:
+   - 0-3 seconds: Fast progress (0-50%)
+   - 3-6 seconds: Slower progress (50-70%)
+   - 6-10 seconds: Crawl to 85%
+   - 10-15 seconds: Very slow to 92%
+   - 15+ seconds: Barely moves (92-96%)
+   - Never reaches 100% until API responds
 4. `apiClient.generatePrompt(data)` calls edge function
 5. Edge function:
    - Constructs meta-prompt following thelaunch.space format
    - Adds project-specific technical requirements (Expo for mobile, Manifest V3 for extensions)
    - Calls OpenRouter API with Claude 3.5 Sonnet
    - Saves generation to database with generation ID
-6. Returns generated prompt to `PromptPreview` component
+6. When API responds:
+   - `ModalContainer` signals completion to `LoadingScreen` via `onComplete` prop
+   - Progress smoothly animates from current percentage to 100% over 500ms
+   - Minimum 2 second display time enforced (prevents jarring flashes on very fast responses)
+   - After completion animation, transitions to `PromptPreview`
 7. User can edit, regenerate with refinement instructions, or copy
 
 ### thelaunch.space Format (Meta-Prompt Structure)
@@ -201,6 +211,49 @@ Dynamic questions rendered based on `projectType` selected in Step 1. Each proje
 - **Mobile App**: Platform (iOS/Android/both), offline functionality, notifications
 - **Landing Page**: Call-to-action, form fields, conversion goals
 - **Other**: General implementation considerations
+
+### Adaptive Loading Screen (LoadingScreen.tsx)
+The loading screen uses a sophisticated adaptive algorithm that provides smooth, realistic progress feedback without fixed durations:
+
+**Key Features:**
+- **Logarithmic Progress Curve**: Uses `calculateProgress()` function with diminishing returns over time
+- **Time-Based Calculation**: Progress updates every 100ms based on elapsed seconds since start
+- **Never Reaches 100% Early**: Progress caps at 96% until API actually responds
+- **Smooth Completion**: When `onComplete` prop becomes true, animates remaining progress to 100% over 500ms using ease-out curve
+
+**Implementation Details:**
+- **State Management**:
+  - `progress`: Current progress percentage (0-100)
+  - `startTime`: Timestamp when loading began (Date.now())
+  - `currentMessageIndex`: Which message to display (0-5)
+  - `isCompleting`: Boolean flag indicating completion animation is running
+
+- **Progress Calculation** (`calculateProgress` function):
+  ```typescript
+  0-3s:   (elapsed / 3) * 50          // Linear to 50%
+  3-6s:   50 + ((elapsed - 3) / 3) * 20      // Linear to 70%
+  6-10s:  70 + ((elapsed - 6) / 4) * 15      // Linear to 85%
+  10-15s: 85 + ((elapsed - 10) / 5) * 7      // Linear to 92%
+  15s+:   92 + (4 * (1 - exp(-overtime/10))) // Exponential approach to 96%
+  ```
+
+- **Message System**:
+  - 6 messages with `minTime` thresholds (0s, 3s, 6s, 9s, 12s, 16s)
+  - Messages update based on elapsed time, not progress percentage
+  - Final message: "Almost there, finalizing details..." for long generations
+
+- **Completion Flow**:
+  1. Parent (`ModalContainer`) sets `onComplete={true}` when API responds
+  2. Loading screen enters `isCompleting` state
+  3. Animates from current progress to 100% using ease-out cubic curve
+  4. Updates heading text to "Prompt ready!"
+  5. Parent waits 800ms for animation, then shows preview
+
+**Integration with ModalContainer:**
+- `handleGenerate()` sets `isApiComplete` state when API responds
+- Minimum 2 second display time prevents flash on very fast responses
+- Passes `onComplete={isApiComplete}` prop to LoadingScreen
+- Waits additional 800ms after completion for smooth transition to preview
 
 ### Smart Button UX (content.tsx)
 The button has two modes that adapt to user context:
@@ -311,11 +364,24 @@ Modal is completely isolated from bolt.new's DOM:
 - Self-contained styling (no conflicts with bolt.new styles)
 - Portal pattern ensures clean unmounting
 
-### Loading Experience
-- LoadingScreen component displays during generation
-- Minimum 13.5 second display time enforced
-- Animated states and progress indicators
-- Prevents jarring quick flashes for fast API responses
+### Loading Experience (Adaptive Algorithm)
+- **LoadingScreen** uses an adaptive progress algorithm that syncs with actual API response time
+- **No Fixed Duration**: Progress is calculated based on elapsed time using logarithmic curve
+- **Progress Zones**:
+  - 0-3s: Fast (0% → 50%) - responsive for quick generations
+  - 3-6s: Moderate (50% → 70%) - maintains user confidence
+  - 6-10s: Slow (70% → 85%) - shows continued progress
+  - 10-15s: Very slow (85% → 92%) - patient waiting
+  - 15s+: Asymptotic (92% → 96%) - never stalls completely
+- **Completion Animation**: When API responds, progress smoothly animates to 100% over 500ms
+- **Minimum Display Time**: 2 seconds minimum prevents jarring flashes on very fast API responses
+- **No Looping**: Progress never resets or loops, regardless of how long API takes
+- **Message System**: Time-based messages (not progress-based) cycle through 6 states
+- **Benefits**:
+  - Fast responses (3-5s) complete quickly without artificial delays
+  - Slow responses (15-30s) show gradual progress without reaching 100% prematurely
+  - Professional UX that adapts to actual backend performance
+  - User never sees progress bar loop or reset
 
 ### File Organization
 Key files and their purposes:
