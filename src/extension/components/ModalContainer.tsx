@@ -23,6 +23,7 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [error, setError] = useState('');
+  const [sessionExpiredMessage, setSessionExpiredMessage] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isApiComplete, setIsApiComplete] = useState(false);
   const [generatedPrompt, setGeneratedPrompt] = useState('');
@@ -57,9 +58,16 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
   const handleAuthenticated = (authenticatedUser: User) => {
     setUser(authenticatedUser);
     setError('');
+    setSessionExpiredMessage('');
   };
 
   const handleError = (message: string) => {
+    if (message === 'SESSION_EXPIRED') {
+      setUser(null);
+      setSessionExpiredMessage('Your session has expired. Please log in again to continue.');
+      setTimeout(() => setSessionExpiredMessage(''), 10000);
+      return;
+    }
     setError(message);
     setTimeout(() => setError(''), 5000);
   };
@@ -154,7 +162,21 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
     }
 
     if (!user) {
-      return <AuthForm onAuthenticated={handleAuthenticated} onError={handleError} />;
+      return (
+        <>
+          {sessionExpiredMessage && (
+            <div className="mx-8 mt-4 mb-4 p-4 bg-amber-500/10 border border-amber-500 rounded-lg text-amber-400 text-sm">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{sessionExpiredMessage}</span>
+              </div>
+            </div>
+          )}
+          <AuthForm onAuthenticated={handleAuthenticated} onError={handleError} />
+        </>
+      );
     }
 
     if (isGenerating) {
@@ -170,6 +192,7 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
           onBack={() => setCurrentStep(6)}
           onRegenerate={(newPrompt) => setGeneratedPrompt(newPrompt)}
           onReset={handleReset}
+          onError={handleError}
         />
       );
     }

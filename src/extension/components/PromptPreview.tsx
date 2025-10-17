@@ -12,6 +12,7 @@ interface PromptPreviewProps {
   onBack: () => void;
   onRegenerate: (newPrompt: string) => void;
   onReset: () => void;
+  onError?: (message: string) => void;
 }
 
 export const PromptPreview: React.FC<PromptPreviewProps> = ({
@@ -21,6 +22,7 @@ export const PromptPreview: React.FC<PromptPreviewProps> = ({
   onBack,
   onRegenerate,
   onReset,
+  onError,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedPrompt, setEditedPrompt] = useState(prompt);
@@ -29,10 +31,16 @@ export const PromptPreview: React.FC<PromptPreviewProps> = ({
   const [isCopied, setIsCopied] = useState(false);
   const [error, setError] = useState('');
 
-  const handleEdit = () => {
+  const handleEdit = async () => {
     setIsEditing(true);
     if (!isEditing) {
-      apiClient.trackUsage(generationId, 'edited');
+      try {
+        await apiClient.trackUsage(generationId, 'edited');
+      } catch (err: any) {
+        if (err.message === 'SESSION_EXPIRED' && onError) {
+          onError(err.message);
+        }
+      }
     }
   };
 
@@ -40,7 +48,14 @@ export const PromptPreview: React.FC<PromptPreviewProps> = ({
     try {
       await navigator.clipboard.writeText(isEditing ? editedPrompt : prompt);
       setIsCopied(true);
-      apiClient.trackUsage(generationId, 'copied');
+      try {
+        await apiClient.trackUsage(generationId, 'copied');
+      } catch (err: any) {
+        if (err.message === 'SESSION_EXPIRED' && onError) {
+          onError(err.message);
+          return;
+        }
+      }
       setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
       setError('Failed to copy to clipboard');
@@ -57,7 +72,11 @@ export const PromptPreview: React.FC<PromptPreviewProps> = ({
       setEditedPrompt(response.prompt);
       setIsEditing(false);
     } catch (err: any) {
-      setError(err.message || 'Failed to regenerate prompt');
+      if (err.message === 'SESSION_EXPIRED' && onError) {
+        onError(err.message);
+      } else {
+        setError(err.message || 'Failed to regenerate prompt');
+      }
     } finally {
       setIsRegenerating(false);
     }
@@ -75,7 +94,11 @@ export const PromptPreview: React.FC<PromptPreviewProps> = ({
       setRefinementInput('');
       setIsEditing(false);
     } catch (err: any) {
-      setError(err.message || 'Failed to refine prompt');
+      if (err.message === 'SESSION_EXPIRED' && onError) {
+        onError(err.message);
+      } else {
+        setError(err.message || 'Failed to refine prompt');
+      }
     } finally {
       setIsRegenerating(false);
     }

@@ -16,6 +16,11 @@ class ApiClient {
     return localStorage.getItem('bolt_prompt_generator_token');
   }
 
+  private handleUnauthorized(): never {
+    localStorage.removeItem('bolt_prompt_generator_token');
+    throw new Error('SESSION_EXPIRED');
+  }
+
   private getHeaders(includeAuth = false): HeadersInit {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -123,6 +128,10 @@ class ApiClient {
       }),
     });
 
+    if (response.status === 401) {
+      this.handleUnauthorized();
+    }
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to generate prompt');
@@ -132,11 +141,15 @@ class ApiClient {
   }
 
   async trackUsage(generationId: string, action: 'edited' | 'copied'): Promise<void> {
-    await fetch(`${SUPABASE_URL}/functions/v1/track-usage`, {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/track-usage`, {
       method: 'POST',
       headers: this.getHeaders(true),
       body: JSON.stringify({ generationId, action }),
     });
+
+    if (response.status === 401) {
+      this.handleUnauthorized();
+    }
   }
 
   logout(): void {
