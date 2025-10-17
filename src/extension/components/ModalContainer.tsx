@@ -24,6 +24,7 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [error, setError] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isApiComplete, setIsApiComplete] = useState(false);
   const [generatedPrompt, setGeneratedPrompt] = useState('');
   const [generationId, setGenerationId] = useState('');
 
@@ -65,12 +66,13 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
 
   const handleGenerate = async () => {
     setIsGenerating(true);
+    setIsApiComplete(false);
     setError('');
 
     try {
-      // Start timing for minimum display duration
+      // Start timing for minimum display duration (prevent jarring flashes)
       const startTime = Date.now();
-      const minLoadingTime = 13500; // 13.5 seconds
+      const minLoadingTime = 2000; // 2 seconds minimum
 
       // Make the actual API call
       const response = await apiClient.generatePrompt(questionnaireData);
@@ -84,6 +86,12 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
         await new Promise(resolve => setTimeout(resolve, remainingTime));
       }
 
+      // Signal to LoadingScreen that API is complete
+      setIsApiComplete(true);
+
+      // Wait for completion animation (500ms + small buffer)
+      await new Promise(resolve => setTimeout(resolve, 800));
+
       // Now we can safely show the results
       setGeneratedPrompt(response.prompt);
       setGenerationId(response.generationId);
@@ -92,6 +100,7 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
     } catch (err: any) {
       handleError(err.message || 'Failed to generate prompt');
       setIsGenerating(false);
+      setIsApiComplete(false);
     }
   };
 
@@ -149,7 +158,7 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
     }
 
     if (isGenerating) {
-      return <LoadingScreen />;
+      return <LoadingScreen onComplete={isApiComplete} />;
     }
 
     if (currentStep === 'preview') {

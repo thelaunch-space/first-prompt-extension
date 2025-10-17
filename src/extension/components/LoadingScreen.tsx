@@ -1,56 +1,107 @@
-// Enhanced loading screen with sequential messages and progress animation
-// This component ONLY handles the visual loading animation
-// The parent component controls when loading actually completes
+// Adaptive loading screen with smooth progress that never reaches 100% until API responds
+// Uses logarithmic progress curve that slows down over time
+// No fixed duration - adapts to actual API response time
 
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface LoadingScreenProps {
-  // Removed onComplete - parent controls loading state
+  onComplete?: boolean; // Signal from parent that API has responded
 }
 
 const LOADING_MESSAGES = [
-  { text: "Analyzing your requirements...", duration: 2000 },
-  { text: "Understanding your target audience...", duration: 2000 },
-  { text: "Identifying key pain points...", duration: 2000 },
-  { text: "Structuring functional requirements...", duration: 2500 },
-  { text: "Crafting the perfect prompt...", duration: 3000 },
-  { text: "Finalizing your prompt...", duration: 2000 },
+  { text: "Analyzing your requirements...", minTime: 0 },
+  { text: "Understanding your target audience...", minTime: 3 },
+  { text: "Identifying key pain points...", minTime: 6 },
+  { text: "Structuring functional requirements...", minTime: 9 },
+  { text: "Crafting the perfect prompt...", minTime: 12 },
+  { text: "Almost there, finalizing details...", minTime: 16 },
 ];
 
-export const LoadingScreen: React.FC<LoadingScreenProps> = () => {
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+// Adaptive progress calculation with diminishing returns
+const calculateProgress = (elapsedSeconds: number): number => {
+  if (elapsedSeconds < 3) {
+    // 0-3 seconds: Fast progress to 50%
+    return (elapsedSeconds / 3) * 50;
+  } else if (elapsedSeconds < 6) {
+    // 3-6 seconds: Slower progress to 70%
+    return 50 + ((elapsedSeconds - 3) / 3) * 20;
+  } else if (elapsedSeconds < 10) {
+    // 6-10 seconds: Crawl to 85%
+    return 70 + ((elapsedSeconds - 6) / 4) * 15;
+  } else if (elapsedSeconds < 15) {
+    // 10-15 seconds: Very slow to 92%
+    return 85 + ((elapsedSeconds - 10) / 5) * 7;
+  } else {
+    // 15+ seconds: Barely moves, asymptotically approaches 96%
+    const overtime = elapsedSeconds - 15;
+    return 92 + (4 * (1 - Math.exp(-overtime / 10)));
+  }
+};
+
+export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete = false }) => {
   const [progress, setProgress] = useState(0);
+  const [startTime] = useState(Date.now());
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   useEffect(() => {
-    // Loop through messages continuously until parent dismisses
-    const currentMessage = LOADING_MESSAGES[currentMessageIndex];
-    const progressIncrement = 100 / LOADING_MESSAGES.length;
+    if (onComplete && !isCompleting) {
+      setIsCompleting(true);
+      // Animate to 100% over 500ms
+      const currentProgress = progress;
+      const progressToGo = 100 - currentProgress;
+      const animationDuration = 500;
+      const animationStart = Date.now();
 
-    const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        const targetProgress = (currentMessageIndex + 1) * progressIncrement;
-        const newProgress = prev + 2;
-        return newProgress >= targetProgress ? targetProgress : newProgress;
-      });
-    }, 50);
+      const completeAnimation = setInterval(() => {
+        const elapsed = Date.now() - animationStart;
+        const animationProgress = Math.min(elapsed / animationDuration, 1);
+        // Ease-out animation
+        const easedProgress = 1 - Math.pow(1 - animationProgress, 3);
+        setProgress(currentProgress + (progressToGo * easedProgress));
 
-    const messageTimer = setTimeout(() => {
-      setCurrentMessageIndex((prev) => {
-        // Loop back to first message if we've shown all
-        if (prev >= LOADING_MESSAGES.length - 1) {
-          setProgress(0);
-          return 0;
+        if (animationProgress >= 1) {
+          clearInterval(completeAnimation);
+          setProgress(100);
         }
-        return prev + 1;
-      });
-    }, currentMessage.duration);
+      }, 16); // ~60fps
 
-    return () => {
-      clearTimeout(messageTimer);
-      clearInterval(progressInterval);
-    };
-  }, [currentMessageIndex]);
+      return () => clearInterval(completeAnimation);
+    }
+  }, [onComplete, isCompleting, progress]);
+
+  useEffect(() => {
+    if (isCompleting) return; // Don't update progress if completing
+
+    // Update progress based on elapsed time
+    const progressInterval = setInterval(() => {
+      const elapsedSeconds = (Date.now() - startTime) / 1000;
+      const newProgress = calculateProgress(elapsedSeconds);
+      setProgress(newProgress);
+    }, 100); // Update every 100ms for smooth animation
+
+    return () => clearInterval(progressInterval);
+  }, [startTime, isCompleting]);
+
+  useEffect(() => {
+    if (isCompleting) return; // Don't update messages if completing
+
+    // Update message based on elapsed time
+    const messageInterval = setInterval(() => {
+      const elapsedSeconds = (Date.now() - startTime) / 1000;
+
+      // Find the appropriate message based on elapsed time
+      for (let i = LOADING_MESSAGES.length - 1; i >= 0; i--) {
+        if (elapsedSeconds >= LOADING_MESSAGES[i].minTime) {
+          setCurrentMessageIndex(i);
+          break;
+        }
+      }
+    }, 500); // Check every 500ms
+
+    return () => clearInterval(messageInterval);
+  }, [startTime, isCompleting]);
 
   return (
     <div className="p-8 flex flex-col items-center justify-center min-h-[500px]">
@@ -60,13 +111,13 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = () => {
       </div>
 
       <h2 className="text-2xl font-bold text-white mb-4 text-center">
-        Crafting your perfect prompt...
+        {isCompleting ? "Prompt ready!" : "Crafting your perfect prompt..."}
       </h2>
 
       <div className="w-full max-w-md mb-8">
         <div className="relative h-2 bg-slate-800 rounded-full overflow-hidden">
           <div
-            className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full transition-all duration-300 ease-out"
+            className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full transition-all duration-200 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -78,9 +129,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = () => {
           key={currentMessageIndex}
           className="text-gray-300 text-center animate-fadeIn max-w-md"
         >
-          {currentMessageIndex < LOADING_MESSAGES.length
-            ? LOADING_MESSAGES[currentMessageIndex].text
-            : ""}
+          {LOADING_MESSAGES[currentMessageIndex].text}
         </p>
       </div>
 
@@ -89,7 +138,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = () => {
       </p>
 
       <p className="text-sm text-gray-500 text-center mt-2">
-        Get ready to build something amazing!
+        {isCompleting ? "Loading your results..." : "Get ready to build something amazing!"}
       </p>
     </div>
   );
