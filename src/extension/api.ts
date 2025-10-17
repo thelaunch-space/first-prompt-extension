@@ -61,7 +61,7 @@ class ApiClient {
 
       const data = await response.json();
       console.log('[API Client] Signup success');
-      localStorage.setItem('bolt_prompt_generator_token', data.token);
+      localStorage.setItem('bolt_prompt_generator_token', data.session.access_token);
       return data;
     } catch (error: any) {
       console.error('[API Client] Signup exception:', error);
@@ -82,7 +82,7 @@ class ApiClient {
     }
 
     const data = await response.json();
-    localStorage.setItem('bolt_prompt_generator_token', data.token);
+    localStorage.setItem('bolt_prompt_generator_token', data.session.access_token);
     return data;
   }
 

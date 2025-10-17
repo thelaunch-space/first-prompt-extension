@@ -26,9 +26,15 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const supabase = createClient(
+    const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     );
 
     const url = new URL(req.url);
@@ -47,46 +53,71 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      // Check if user already exists
-      const { data: existingUser } = await supabase
-        .from("extension_users")
-        .select("id")
-        .eq("email", email)
-        .maybeSingle();
-
-      if (existingUser) {
+      if (password.length < 6) {
         return new Response(
-          JSON.stringify({ error: "User already exists" }),
+          JSON.stringify({ error: "Password must be at least 6 characters" }),
           {
-            status: 409,
+            status: 400,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           }
         );
       }
 
-      // Hash password using Web Crypto API
-      const encoder = new TextEncoder();
-      const data = encoder.encode(password);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const password_hash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+      const { data: authData, error: signupError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
 
-      // Create user
-      const { data: newUser, error } = await supabase
-        .from("extension_users")
-        .insert({ email, password_hash })
-        .select("id, email, created_at")
-        .single();
-
-      if (error) {
-        throw error;
+      if (signupError) {
+        return new Response(
+          JSON.stringify({ error: signupError.message }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
       }
 
-      // Generate simple JWT-like token (user_id encoded)
-      const token = btoa(JSON.stringify({ user_id: newUser.id, email: newUser.email }));
+      const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.generateLink({
+        type: 'magiclink',
+        email,
+      });
+
+      if (sessionError || !authData.user) {
+        return new Response(
+          JSON.stringify({ error: "Failed to create session" }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      const { data: signInData, error: signInError } = await supabaseAdmin.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError || !signInData.session) {
+        return new Response(
+          JSON.stringify({ error: "Failed to sign in after signup" }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
 
       return new Response(
-        JSON.stringify({ user: newUser, token }),
+        JSON.stringify({
+          user: {
+            id: authData.user.id,
+            email: authData.user.email,
+            created_at: authData.user.created_at,
+          },
+          session: signInData.session,
+        }),
         {
           status: 201,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -107,21 +138,12 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      // Hash password
-      const encoder = new TextEncoder();
-      const data = encoder.encode(password);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const password_hash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+      const { data, error } = await supabaseAdmin.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      // Find user
-      const { data: user, error } = await supabase
-        .from("extension_users")
-        .select("id, email, password_hash, created_at")
-        .eq("email", email)
-        .maybeSingle();
-
-      if (!user || user.password_hash !== password_hash) {
+      if (error || !data.session) {
         return new Response(
           JSON.stringify({ error: "Invalid credentials" }),
           {
@@ -131,19 +153,14 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      // Update last login
-      await supabase
-        .from("extension_users")
-        .update({ last_login: new Date().toISOString() })
-        .eq("id", user.id);
-
-      // Generate token
-      const token = btoa(JSON.stringify({ user_id: user.id, email: user.email }));
-
       return new Response(
-        JSON.stringify({ 
-          user: { id: user.id, email: user.email, created_at: user.created_at }, 
-          token 
+        JSON.stringify({
+          user: {
+            id: data.user.id,
+            email: data.user.email,
+            created_at: data.user.created_at,
+          },
+          session: data.session,
         }),
         {
           status: 200,
@@ -165,34 +182,10 @@ Deno.serve(async (req: Request) => {
       }
 
       const token = authHeader.replace("Bearer ", "");
-      try {
-        const decoded = JSON.parse(atob(token));
-        
-        // Verify user exists
-        const { data: user } = await supabase
-          .from("extension_users")
-          .select("id, email, created_at")
-          .eq("id", decoded.user_id)
-          .maybeSingle();
 
-        if (!user) {
-          return new Response(
-            JSON.stringify({ error: "Invalid token" }),
-            {
-              status: 401,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
-        }
+      const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
 
-        return new Response(
-          JSON.stringify({ user }),
-          {
-            status: 200,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      } catch {
+      if (error || !user) {
         return new Response(
           JSON.stringify({ error: "Invalid token" }),
           {
@@ -201,6 +194,20 @@ Deno.serve(async (req: Request) => {
           }
         );
       }
+
+      return new Response(
+        JSON.stringify({
+          user: {
+            id: user.id,
+            email: user.email,
+            created_at: user.created_at,
+          }
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     return new Response(
