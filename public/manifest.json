@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Bolt.new First Prompt Generator",
+  "version": "1.0.0",
+  "description": "Generate optimized first prompts for Bolt.new through a guided questionnaire",
+  "permissions": ["storage"],
+  "host_permissions": ["https://bolt.new/*"],
+  "action": {
+    "default_title": "Bolt.new Prompt Generator"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://bolt.new/*"],
+      "js": ["content.js"],
+      "css": ["style.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["modal.html"],
+      "matches": ["https://bolt.new/*"]
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
