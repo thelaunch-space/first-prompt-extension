@@ -1,4 +1,9 @@
 // Content script that injects into bolt.new pages
+// Implements smart edge-docking button UX:
+// - Full mode (bottom-right) when page is empty
+// - Compact mode (left-edge tab) after user enters prompt
+// - Auto-hides to left edge, slides out on hover
+// - No dragging functionality for simplified UX
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -7,24 +12,14 @@ import '../index.css';
 
 type ButtonMode = 'full' | 'compact';
 
-interface ButtonPosition {
-  x: number;
-  y: number;
-}
-
 class BoltPromptGenerator {
   private button: HTMLButtonElement | null = null;
   private modalRoot: HTMLDivElement | null = null;
   private reactRoot: any = null;
   private buttonMode: ButtonMode = 'full';
   private observer: MutationObserver | null = null;
-  private isDragging: boolean = false;
-  private dragStartPos: { x: number; y: number } = { x: 0, y: 0 };
-  private buttonStartPos: { x: number; y: number } = { x: 0, y: 0 };
-  private hasMoved: boolean = false;
 
   private readonly STORAGE_KEY_MODE = 'bolt_prompt_generator_mode';
-  private readonly STORAGE_KEY_POSITION = 'bolt_prompt_generator_position';
 
   init() {
     if (this.isValidBoltPage()) {
@@ -48,15 +43,6 @@ class BoltPromptGenerator {
 
   private saveMode(mode: ButtonMode) {
     localStorage.setItem(this.STORAGE_KEY_MODE, mode);
-  }
-
-  private savePosition(position: ButtonPosition) {
-    localStorage.setItem(this.STORAGE_KEY_POSITION, JSON.stringify(position));
-  }
-
-  private loadPosition(): ButtonPosition | null {
-    const saved = localStorage.getItem(this.STORAGE_KEY_POSITION);
-    return saved ? JSON.parse(saved) : null;
   }
 
   private setupPromptObserver() {
@@ -106,22 +92,25 @@ class BoltPromptGenerator {
       span.style.overflow = 'hidden';
     }
 
-    this.button.style.padding = '16px';
-    this.button.style.borderRadius = '50%';
-    this.button.style.width = '56px';
-    this.button.style.height = '56px';
+    this.button.style.padding = '10px 8px';
+    this.button.style.borderRadius = '0 8px 8px 0';
+    this.button.style.width = '40px';
+    this.button.style.height = '48px';
     this.button.style.justifyContent = 'center';
-    this.button.style.cursor = 'move';
+    this.button.style.cursor = 'pointer';
+    this.button.style.left = '-32px';
+    this.button.style.top = '50%';
+    this.button.style.transform = 'translateY(-50%)';
+    this.button.style.bottom = 'auto';
+    this.button.style.right = 'auto';
+    this.button.style.transition = 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease';
 
-    const savedPosition = this.loadPosition();
-    if (savedPosition) {
-      this.button.style.bottom = 'auto';
-      this.button.style.right = 'auto';
-      this.button.style.top = `${savedPosition.y}px`;
-      this.button.style.left = `${savedPosition.x}px`;
+    const svg = this.button.querySelector('svg');
+    if (svg) {
+      svg.style.transform = 'scale(1.1)';
     }
 
-    this.enableDragging();
+    this.enableEdgeHover();
   }
 
   private transformToFull() {
@@ -129,15 +118,19 @@ class BoltPromptGenerator {
 
     this.buttonMode = 'full';
     this.saveMode('full');
-    localStorage.removeItem(this.STORAGE_KEY_POSITION);
 
-    this.disableDragging();
+    this.disableEdgeHover();
 
     const span = this.button.querySelector('span');
     if (span) {
       span.style.opacity = '1';
       span.style.width = 'auto';
       span.style.overflow = 'visible';
+    }
+
+    const svg = this.button.querySelector('svg');
+    if (svg) {
+      svg.style.transform = 'scale(1)';
     }
 
     this.button.style.padding = '12px 24px';
@@ -148,156 +141,37 @@ class BoltPromptGenerator {
     this.button.style.right = '24px';
     this.button.style.top = 'auto';
     this.button.style.left = 'auto';
+    this.button.style.transform = 'none';
     this.button.style.cursor = 'pointer';
+    this.button.style.transition = 'all 0.3s ease';
   }
 
-  private enableDragging() {
+  private enableEdgeHover() {
     if (!this.button) return;
 
-    this.button.addEventListener('mousedown', this.handleMouseDown);
-    this.button.addEventListener('touchstart', this.handleTouchStart, { passive: false });
+    this.button.addEventListener('mouseenter', this.handleEdgeHover);
+    this.button.addEventListener('mouseleave', this.handleEdgeLeave);
   }
 
-  private disableDragging() {
+  private disableEdgeHover() {
     if (!this.button) return;
 
-    this.button.removeEventListener('mousedown', this.handleMouseDown);
-    this.button.removeEventListener('touchstart', this.handleTouchStart);
+    this.button.removeEventListener('mouseenter', this.handleEdgeHover);
+    this.button.removeEventListener('mouseleave', this.handleEdgeLeave);
   }
 
-  private handleMouseDown = (e: MouseEvent) => {
+  private handleEdgeHover = () => {
     if (!this.button || this.buttonMode !== 'compact') return;
-
-    e.preventDefault();
-    this.isDragging = true;
-    this.hasMoved = false;
-
-    const rect = this.button.getBoundingClientRect();
-    this.dragStartPos = { x: e.clientX, y: e.clientY };
-    this.buttonStartPos = { x: rect.left, y: rect.top };
-
-    document.addEventListener('mousemove', this.handleMouseMove);
-    document.addEventListener('mouseup', this.handleMouseUp);
-
-    if (this.button) {
-      this.button.style.transform = 'scale(1.1)';
-      this.button.style.boxShadow = '0 20px 40px rgba(59, 130, 246, 0.5)';
-    }
+    this.button.style.left = '0px';
+    this.button.style.boxShadow = '0 8px 24px rgba(59, 130, 246, 0.4)';
   };
 
-  private handleMouseMove = (e: MouseEvent) => {
-    if (!this.isDragging || !this.button) return;
-
-    const deltaX = e.clientX - this.dragStartPos.x;
-    const deltaY = e.clientY - this.dragStartPos.y;
-
-    if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
-      this.hasMoved = true;
-    }
-
-    const newX = this.buttonStartPos.x + deltaX;
-    const newY = this.buttonStartPos.y + deltaY;
-
-    const maxX = window.innerWidth - 56;
-    const maxY = window.innerHeight - 56;
-
-    const constrainedX = Math.max(0, Math.min(newX, maxX));
-    const constrainedY = Math.max(0, Math.min(newY, maxY));
-
-    this.button.style.left = `${constrainedX}px`;
-    this.button.style.top = `${constrainedY}px`;
-  };
-
-  private handleMouseUp = () => {
-    if (!this.button) return;
-
-    document.removeEventListener('mousemove', this.handleMouseMove);
-    document.removeEventListener('mouseup', this.handleMouseUp);
-
-    if (this.button) {
-      this.button.style.transform = 'scale(1)';
-      this.button.style.boxShadow = '0 10px 25px rgba(59, 130, 246, 0.3)';
-    }
-
-    if (this.isDragging && this.hasMoved) {
-      const rect = this.button.getBoundingClientRect();
-      this.savePosition({ x: rect.left, y: rect.top });
-    } else if (this.isDragging && !this.hasMoved) {
-      this.openModal();
-    }
-
-    this.isDragging = false;
-    this.hasMoved = false;
-  };
-
-  private handleTouchStart = (e: TouchEvent) => {
+  private handleEdgeLeave = () => {
     if (!this.button || this.buttonMode !== 'compact') return;
-
-    e.preventDefault();
-    const touch = e.touches[0];
-    this.isDragging = true;
-    this.hasMoved = false;
-
-    const rect = this.button.getBoundingClientRect();
-    this.dragStartPos = { x: touch.clientX, y: touch.clientY };
-    this.buttonStartPos = { x: rect.left, y: rect.top };
-
-    document.addEventListener('touchmove', this.handleTouchMove, { passive: false });
-    document.addEventListener('touchend', this.handleTouchEnd);
-
-    if (this.button) {
-      this.button.style.transform = 'scale(1.1)';
-      this.button.style.boxShadow = '0 20px 40px rgba(59, 130, 246, 0.5)';
-    }
+    this.button.style.left = '-32px';
+    this.button.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
   };
 
-  private handleTouchMove = (e: TouchEvent) => {
-    if (!this.isDragging || !this.button) return;
-
-    e.preventDefault();
-    const touch = e.touches[0];
-
-    const deltaX = touch.clientX - this.dragStartPos.x;
-    const deltaY = touch.clientY - this.dragStartPos.y;
-
-    if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
-      this.hasMoved = true;
-    }
-
-    const newX = this.buttonStartPos.x + deltaX;
-    const newY = this.buttonStartPos.y + deltaY;
-
-    const maxX = window.innerWidth - 56;
-    const maxY = window.innerHeight - 56;
-
-    const constrainedX = Math.max(0, Math.min(newX, maxX));
-    const constrainedY = Math.max(0, Math.min(newY, maxY));
-
-    this.button.style.left = `${constrainedX}px`;
-    this.button.style.top = `${constrainedY}px`;
-  };
-
-  private handleTouchEnd = () => {
-    if (!this.button) return;
-
-    document.removeEventListener('touchmove', this.handleTouchMove);
-    document.removeEventListener('touchend', this.handleTouchEnd);
-
-    if (this.button) {
-      this.button.style.transform = 'scale(1)';
-      this.button.style.boxShadow = '0 10px 25px rgba(59, 130, 246, 0.3)';
-    }
-
-    if (this.isDragging && this.hasMoved) {
-      const rect = this.button.getBoundingClientRect();
-      this.savePosition({ x: rect.left, y: rect.top });
-    } else if (this.isDragging && !this.hasMoved) {
-      this.openModal();
-    }
-
-    this.isDragging = false;
-    this.hasMoved = false;
-  };
 
   private injectButton() {
     if (this.button) return;
@@ -306,7 +180,7 @@ class BoltPromptGenerator {
     this.button.id = 'bolt-prompt-generator-btn';
     this.button.title = 'Generate Prompt';
     this.button.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transition: transform 0.3s ease;">
         <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
       </svg>
       <span style="transition: opacity 0.3s ease, width 0.3s ease; font-weight: 600; letter-spacing: -0.01em;">
@@ -315,28 +189,27 @@ class BoltPromptGenerator {
     `;
 
     const isCompact = this.buttonMode === 'compact';
-    const savedPosition = isCompact ? this.loadPosition() : null;
 
     this.button.style.cssText = `
       position: fixed;
-      ${savedPosition ? `top: ${savedPosition.y}px; left: ${savedPosition.x}px;` : 'bottom: 24px; right: 24px;'}
+      ${isCompact ? 'left: -32px; top: 50%; transform: translateY(-50%);' : 'bottom: 24px; right: 24px;'}
       z-index: 999998;
       display: flex;
       align-items: center;
-      justify-content: ${isCompact ? 'center' : 'flex-start'};
+      justify-content: center;
       gap: 8px;
-      padding: ${isCompact ? '16px' : '12px 24px'};
+      padding: ${isCompact ? '10px 8px' : '12px 24px'};
       background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
       color: white;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 14px;
       font-weight: 600;
       border: none;
-      border-radius: ${isCompact ? '50%' : '12px'};
-      cursor: ${isCompact ? 'move' : 'pointer'};
-      box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
-      transition: all 0.3s ease;
-      ${isCompact ? 'width: 56px; height: 56px;' : ''}
+      border-radius: ${isCompact ? '0 8px 8px 0' : '12px'};
+      cursor: pointer;
+      box-shadow: ${isCompact ? '0 4px 12px rgba(59, 130, 246, 0.3)' : '0 10px 25px rgba(59, 130, 246, 0.3)'};
+      transition: ${isCompact ? 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease' : 'all 0.3s ease'};
+      ${isCompact ? 'width: 40px; height: 48px;' : ''}
     `;
 
     if (isCompact) {
@@ -346,7 +219,14 @@ class BoltPromptGenerator {
         span.style.width = '0';
         span.style.overflow = 'hidden';
       }
-      this.enableDragging();
+      const svg = this.button.querySelector('svg');
+      if (svg instanceof SVGElement) {
+        svg.style.transform = 'scale(1.1)';
+      }
+      this.enableEdgeHover();
+      this.button.addEventListener('click', () => {
+        this.openModal();
+      });
     } else {
       this.button.addEventListener('mouseenter', () => {
         if (this.button && this.buttonMode === 'full') {
