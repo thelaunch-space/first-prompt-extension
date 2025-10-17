@@ -132,9 +132,14 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
     if (isGenerating) {
       return (
         <div className="p-8 flex flex-col items-center justify-center min-h-[400px]">
-          <Loader2 className="animate-spin text-blue-500 mb-4" size={48} />
-          <p className="text-white text-lg font-medium">Generating your prompt...</p>
-          <p className="text-gray-400 text-sm mt-2">This may take a few seconds</p>
+          <Loader2 className="animate-spin text-blue-500 mb-6" size={48} />
+          <p className="text-white text-xl font-semibold mb-3">Crafting your perfect prompt...</p>
+          <p className="text-gray-300 text-sm text-center max-w-md leading-relaxed">
+            Our AI is analyzing your answers and building a detailed prompt that Bolt will love.
+          </p>
+          <p className="text-blue-400 text-sm mt-2 font-medium">
+            Get ready to build something amazing!
+          </p>
         </div>
       );
     }
