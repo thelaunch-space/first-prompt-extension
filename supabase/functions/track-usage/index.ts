@@ -32,19 +32,40 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const supabase = createClient(
+    const token = authHeader.replace("Bearer ", "");
+
+    const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     );
+
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Invalid token" }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
     const { generationId, action }: TrackRequest = await req.json();
 
     const updateData = action === "edited" ? { was_edited: true } : { was_copied: true };
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from("prompt_generations")
       .update(updateData)
-      .eq("id", generationId);
+      .eq("id", generationId)
+      .eq("user_id", user.id);
 
     if (error) {
       throw error;

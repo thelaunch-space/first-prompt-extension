@@ -25,7 +25,6 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // Verify authentication
     const authHeader = req.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return new Response(
@@ -38,11 +37,21 @@ Deno.serve(async (req: Request) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    let userId: string;
-    try {
-      const decoded = JSON.parse(atob(token));
-      userId = decoded.user_id;
-    } catch {
+
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
+
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+    if (authError || !user) {
       return new Response(
         JSON.stringify({ error: "Invalid token" }),
         {
@@ -52,10 +61,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    const userId = user.id;
 
     const {
       projectType,
@@ -66,7 +72,6 @@ Deno.serve(async (req: Request) => {
       refinementInstructions,
     }: GenerateRequest = await req.json();
 
-    // Construct meta-prompt for OpenRouter
     const metaPrompt = `You are an expert prompt engineer specializing in AI coding tools like Bolt.new. Generate a structured, production-ready first prompt based on the following user requirements.
 
 **User Requirements:**
@@ -106,7 +111,6 @@ ${refinementInstructions ? `\n- Refinement Instructions: ${refinementInstruction
 
 Generate the prompt now:`;
 
-    // Call OpenRouter API
     const openRouterResponse = await fetch(
       "https://openrouter.ai/api/v1/chat/completions",
       {
@@ -137,8 +141,7 @@ Generate the prompt now:`;
     const openRouterData = await openRouterResponse.json();
     const generatedPrompt = openRouterData.choices[0].message.content;
 
-    // Save to database
-    const { data: generation, error } = await supabase
+    const { data: generation, error } = await supabaseAdmin
       .from("prompt_generations")
       .insert({
         user_id: userId,
@@ -157,7 +160,7 @@ Generate the prompt now:`;
     }
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         prompt: generatedPrompt,
         generationId: generation.id,
       }),
