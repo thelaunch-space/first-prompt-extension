@@ -309,7 +309,9 @@ class BoltPromptGenerator {
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
       </svg>
-      <span style="transition: opacity 0.3s ease, width 0.3s ease;">Generate First Prompt</span>
+      <span style="transition: opacity 0.3s ease, width 0.3s ease; font-weight: 600; letter-spacing: -0.01em;">
+        Generate First <span style="background: linear-gradient(135deg, #ffffff 0%, #60A5FA 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700;">Prompt</span>
+      </span>
     `;
 
     const isCompact = this.buttonMode === 'compact';
@@ -326,7 +328,7 @@ class BoltPromptGenerator {
       padding: ${isCompact ? '16px' : '12px 24px'};
       background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
       color: white;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 14px;
       font-weight: 600;
       border: none;
