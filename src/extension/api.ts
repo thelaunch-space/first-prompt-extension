@@ -4,6 +4,13 @@ import { AuthResponse, GenerateResponse, QuestionnaireData } from './types';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
+console.log('[API Client] Initializing with URL:', SUPABASE_URL);
+console.log('[API Client] Environment check:', {
+  hasUrl: !!SUPABASE_URL,
+  urlValue: SUPABASE_URL,
+  envKeys: Object.keys(import.meta.env)
+});
+
 class ApiClient {
   private getAuthToken(): string | null {
     return localStorage.getItem('bolt_prompt_generator_token');
@@ -25,20 +32,41 @@ class ApiClient {
   }
 
   async signup(email: string, password: string): Promise<AuthResponse> {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/auth/signup`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify({ email, password }),
-    });
+    const url = `${SUPABASE_URL}/functions/v1/auth/signup`;
+    console.log('[API Client] Signup attempt:', { url, email });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Signup failed');
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify({ email, password }),
+      });
+
+      console.log('[API Client] Signup response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[API Client] Signup error response:', errorText);
+        try {
+          const error = JSON.parse(errorText);
+          throw new Error(error.error || 'Signup failed');
+        } catch {
+          throw new Error(`Signup failed: ${response.status} ${response.statusText}`);
+        }
+      }
+
+      const data = await response.json();
+      console.log('[API Client] Signup success');
+      localStorage.setItem('bolt_prompt_generator_token', data.token);
+      return data;
+    } catch (error: any) {
+      console.error('[API Client] Signup exception:', error);
+      throw error;
     }
-
-    const data = await response.json();
-    localStorage.setItem('bolt_prompt_generator_token', data.token);
-    return data;
   }
 
   async login(email: string, password: string): Promise<AuthResponse> {
