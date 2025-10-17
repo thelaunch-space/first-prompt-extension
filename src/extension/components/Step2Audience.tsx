@@ -1,6 +1,6 @@
 // Step 2: Target Audience Description with premium text input
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Users } from 'lucide-react';
 
 interface Step2Props {
@@ -16,7 +16,6 @@ export const Step2Audience: React.FC<Step2Props> = ({
   onNext,
   onBack,
 }) => {
-  const [isFocused, setIsFocused] = useState(false);
   const canProceed = targetAudience.trim().length >= 10;
   const charCount = targetAudience.length;
 
@@ -35,21 +34,13 @@ export const Step2Audience: React.FC<Step2Props> = ({
         </p>
       </div>
 
-      <div className="mb-6 relative">
-        <label
-          className={`absolute left-4 transition-all duration-300 pointer-events-none ${
-            isFocused || targetAudience
-              ? '-top-2.5 text-xs bg-slate-900 px-2 text-blue-400'
-              : 'top-3 text-sm text-gray-500'
-          }`}
-        >
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-300 mb-2">
           Target Audience Description
         </label>
         <textarea
           value={targetAudience}
           onChange={(e) => onAudienceChange(e.target.value)}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
           placeholder="E.g., Small business owners running bootstrapped companies, profitable, based out of US, UK, Canada. They handle their own marketing and operations, value efficiency, and are comfortable with technology but not technical experts."
           className="w-full px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg focus:shadow-blue-500/10 min-h-[140px] resize-none transition-all duration-300"
         />

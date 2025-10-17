@@ -1,6 +1,6 @@
 // Step 4: Solution Description - What should the app do to solve the problems
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Lightbulb } from 'lucide-react';
 
 interface Step4Props {
@@ -16,7 +16,6 @@ export const Step4Description: React.FC<Step4Props> = ({
   onNext,
   onBack,
 }) => {
-  const [isFocused, setIsFocused] = useState(false);
   const canProceed = projectDescription.trim().length >= 20;
   const charCount = projectDescription.length;
 
@@ -35,21 +34,13 @@ export const Step4Description: React.FC<Step4Props> = ({
         </p>
       </div>
 
-      <div className="mb-6 relative">
-        <label
-          className={`absolute left-4 transition-all duration-300 pointer-events-none ${
-            isFocused || projectDescription
-              ? '-top-2.5 text-xs bg-slate-900 px-2 text-green-400'
-              : 'top-3 text-sm text-gray-500'
-          }`}
-        >
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-300 mb-2">
           Solution Description
         </label>
         <textarea
           value={projectDescription}
           onChange={(e) => onDescriptionChange(e.target.value)}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
           placeholder="E.g., The app should centralize all customer messages in one dashboard, automatically categorize inquiries, send follow-up reminders, generate response templates, and provide analytics showing which channels bring in the most valuable customers."
           className="w-full px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:shadow-lg focus:shadow-green-500/10 min-h-[160px] resize-none transition-all duration-300"
         />

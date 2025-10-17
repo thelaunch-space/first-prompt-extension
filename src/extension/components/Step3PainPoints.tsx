@@ -1,6 +1,6 @@
 // Step 3: Pain Points - Identifying target audience problems and frustrations
 
-import React, { useState } from 'react';
+import React from 'react';
 import { AlertCircle } from 'lucide-react';
 
 interface Step3Props {
@@ -16,7 +16,6 @@ export const Step3PainPoints: React.FC<Step3Props> = ({
   onNext,
   onBack,
 }) => {
-  const [isFocused, setIsFocused] = useState(false);
   const canProceed = painPoints.trim().length >= 10;
   const charCount = painPoints.length;
 
@@ -35,21 +34,13 @@ export const Step3PainPoints: React.FC<Step3Props> = ({
         </p>
       </div>
 
-      <div className="mb-6 relative">
-        <label
-          className={`absolute left-4 transition-all duration-300 pointer-events-none ${
-            isFocused || painPoints
-              ? '-top-2.5 text-xs bg-slate-900 px-2 text-orange-400'
-              : 'top-3 text-sm text-gray-500'
-          }`}
-        >
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-300 mb-2">
           Pain Points & Frustrations
         </label>
         <textarea
           value={painPoints}
           onChange={(e) => onPainPointsChange(e.target.value)}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
           placeholder="E.g., They struggle to manage customer inquiries across multiple channels (email, social media, phone), miss important follow-ups, waste hours on repetitive admin tasks, and can't easily track which marketing efforts bring in customers."
           className="w-full px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:shadow-lg focus:shadow-orange-500/10 min-h-[140px] resize-none transition-all duration-300"
         />
