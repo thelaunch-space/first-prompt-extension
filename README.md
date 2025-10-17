@@ -1,174 +1,112 @@
-# Bolt.new First Prompt Generator - Chrome Extension
+# Your First Prompt Makes or Breaks Everything in Bolt.new
 
-A Chrome extension that helps Bolt.new users create optimized first prompts through a guided questionnaire, reducing token waste and improving project success rates.
+If you've used bolt.new, you know the frustration. You type a prompt, hit enter, and watch the AI build something that's... *close*, but not quite right. 
 
-## Features
+Maybe it missed key features. Maybe the design doesn't match what you had in mind. Maybe it built the wrong thing entirely.  
 
-- **Guided Questionnaire**: 5-step process to capture project requirements
-- **Smart Prompt Generation**: AI-powered prompt creation using OpenRouter
-- **User Authentication**: Secure signup/login system with usage tracking
-- **Adaptive Questions**: Dynamic questions based on project type
-- **Prompt Refinement**: Edit, regenerate, or refine generated prompts
-- **One-Click Copy**: Copy optimized prompts directly to Bolt.new
+So you try again. And again. Each iteration burns through time, credits, and momentum.
 
-## Installation
+**Here's the reality: in vibe-coding, your first prompt is everything.**
 
-### Prerequisites
+A vague prompt gets you a vague project. A poorly structured prompt leads to endless back-and-forth. And when you're staring at that empty text box, it's hard to know where to start. What details matter? What should you include? How do you communicate your vision in a way that actually works?
 
-1. Node.js 18+ installed
-2. Chrome browser
-3. Supabase account (already configured)
-4. OpenRouter API key
+This is where most people get stuck. And it's not your fault.
 
-### Setup
+Translating an idea in your head into a structured, comprehensive prompt that an AI can execute isn't intuitive. Professional prompt engineers spend hours learning frameworks, studying what works, and crafting the perfect inputs. But you just want to build your app, landing page, or extension without needing a PhD in prompt engineering.
 
-1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+---
 
-2. **Configure environment variables**:
-   Create a `.env` file with:
-   ```
-   VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
+## What This Extension Does
 
-3. **Configure OpenRouter API Key**:
-   The extension requires an OpenRouter API key to generate prompts. Add it to your Supabase environment:
-   - Go to your Supabase project dashboard
-   - Navigate to Project Settings > Edge Functions
-   - Add secret: `OPENROUTER_API_KEY` with your API key value
-   - Get your API key from https://openrouter.ai
+**Bolt Prompt Generator** is a Chrome extension that guides you through creating professional, optimized first prompts for bolt.new. No more guessing. No more vague descriptions. No more wasted iterations.
 
-4. **Build the extension**:
-   ```bash
-   npm run build:extension
-   ```
+When you open bolt.new, you'll see a subtle button in the corner. Click it, and you're taken through a **simple guided questionnaire** designed to extract exactly what bolt.new needs to build your project right the first time.
 
-5. **Load in Chrome**:
-   - Open Chrome and go to `chrome://extensions/`
-   - Enable "Developer mode" (toggle in top right)
-   - Click "Load unpacked"
-   - Select the `dist` folder from this project
+The extension does the thinking for you. It asks the right questions, structures your answers into a proven format, and uses AI to generate a comprehensive prompt that covers everything from your target audience to functional requirements to design preferences.
 
-## Usage
+**The result?** A professional-grade prompt you can copy directly into bolt.new and watch it build exactly what you envisioned.
 
-1. Navigate to https://bolt.new in Chrome
-2. Look for the "Generate First Prompt" button in the bottom-right corner
-3. Click the button to open the questionnaire modal
-4. Sign up or log in (first-time users)
-5. Complete the 5-step questionnaire:
-   - **Step 1**: Select project type
-   - **Step 2**: Define target audience
-   - **Step 3**: List core features (2-5)
-   - **Step 4**: Answer adaptive questions based on project type
-   - **Step 5**: Choose design style and preferences
-6. Review the generated prompt
-7. Optionally edit, regenerate, or refine the prompt
-8. Click "Copy to Bolt.new" to copy the optimized prompt
-9. Paste into Bolt.new and start building
+---
 
-## Architecture
+## How It Works
 
-### Frontend (Chrome Extension)
-- **Content Script**: Injects button and modal into bolt.new pages
-- **React Components**: Modal UI with 5-step questionnaire flow
-- **State Management**: React hooks for managing questionnaire data
-- **API Client**: Communicates with Supabase Edge Functions
+The extension walks you through a carefully designed process that captures your project vision systematically:
 
-### Backend (Supabase)
-- **Database**:
-  - `extension_users`: User accounts and authentication
-  - `prompt_generations`: Usage tracking and prompt history
-- **Edge Functions**:
-  - `auth`: Handles signup, login, and token verification
-  - `generate-prompt`: AI prompt generation via OpenRouter
-  - `track-usage`: Tracks user actions (edit, copy)
+**Understanding Your Build**  
+The questionnaire adapts based on what you're creating—whether it's a Chrome extension, micro-SaaS app, mobile app, landing page, or custom project. Each question is tailored to extract the specific details that matter for your type of build.
 
-### AI Integration
-- **OpenRouter API**: Uses Claude 3.5 Sonnet for prompt generation
-- **Meta-Prompting**: Structures requests to generate Bolt.new-optimized prompts
-- **thelaunch.space Format**: Follows best practices for AI coding tools
+**Smart, Context-Aware Questions**  
+No generic prompts. The extension asks targeted questions that reveal the critical details bolt.new needs: who you're building for, what problems you're solving, and how your solution should work. The questions adapt intelligently based on your previous answers.
 
-## Development
+**Professional Prompt Generation**  
+Once you've answered the questions, the extension uses **Claude Haiku 4.5** to generate a comprehensive, structured prompt following proven frameworks optimized for AI-driven development. Everything is focused on **WHAT** to build, ensuring comprehensive coverage without over-specifying implementation details.
 
-### Project Structure
-```
-/src/extension/
-  /components/      # React components for UI
-    - AuthForm.tsx
-    - Step1ProjectType.tsx
-    - Step2Audience.tsx
-    - Step3Features.tsx
-    - Step4Adaptive.tsx
-    - Step5Design.tsx
-    - PromptPreview.tsx
-    - ModalContainer.tsx
-  - content.tsx     # Content script entry point
-  - api.ts          # API client for Supabase
-  - types.ts        # TypeScript interfaces
-/supabase/
-  /functions/       # Edge Functions
-    - auth/
-    - generate-prompt/
-    - track-usage/
-/public/
-  - manifest.json   # Chrome extension manifest
-  - icon*.png       # Extension icons
-```
+You can review, edit, and refine the generated prompt before copying it directly into bolt.new.
 
-### Build Commands
+---
 
-- `npm run dev` - Start development server (for testing components)
-- `npm run build` - Build production web app
-- `npm run build:extension` - Build Chrome extension
-- `npm run lint` - Run ESLint
-- `npm run typecheck` - TypeScript type checking
+## Why This Matters
 
-## Security
+**Time saved:** No more trial-and-error. Get it right the first time.
 
-- Passwords are hashed using SHA-256 before storage
-- Token-based authentication for API requests
-- Row Level Security (RLS) enabled on all database tables
-- CORS configured for Supabase Edge Functions
-- No sensitive data exposed in client-side code
+**Better results:** Structured prompts produce better builds. Period.
 
-## Troubleshooting
+**Lower barrier:** You don't need to be a prompt engineer. The extension does that work for you.
 
-### Extension doesn't appear on bolt.new
-- Check that the extension is enabled in `chrome://extensions/`
-- Verify the extension has permissions for `https://bolt.new/*`
-- Refresh the bolt.new page
+**Confidence:** Stop second-guessing yourself. The guided process ensures you've covered everything that matters.
 
-### Authentication fails
-- Verify Supabase URL and keys are correct in `.env`
-- Check browser console for error messages
-- Ensure Edge Functions are deployed
+**Beginner-friendly:** New to bolt.new? This extension is your training wheels. It teaches you what good prompts look like by example.
 
-### Prompt generation fails
-- Verify OpenRouter API key is configured in Supabase
-- Check that you have OpenRouter credits available
-- Review Edge Function logs in Supabase dashboard
+**Expert-validated:** The format is based on real-world prompt engineering best practices, refined through testing and iteration.
 
-### Build errors
-- Run `npm install` to ensure all dependencies are installed
-- Clear `node_modules` and reinstall: `rm -rf node_modules && npm install`
-- Check Node.js version (18+ required)
+---
 
-## Future Enhancements
+## What You Need to Know
 
-- Usage quotas and billing tiers
-- Prompt templates library
-- Team collaboration features
-- Analytics dashboard
-- Export prompt history
-- Browser extension for other browsers (Firefox, Edge)
+**Requirements:**
+- Free account creation (email + password)
+- Works exclusively on bolt.new pages
+- Requires Chrome browser
 
-## License
+**Privacy:**
+- Minimal permissions (storage + bolt.new access only)
+- Your data is stored securely via Supabase
+- No tracking beyond usage analytics (edited/copied prompts)
 
-MIT License
+**Cost:**
+- The extension itself is free
+- Prompt generation is powered by AI and requires server costs, but usage is included with your account
 
-## Support
+**Smart UX:**
+- Button appears bottom-right when bolt.new is empty
+- Transforms into a subtle left-edge tab after you enter a prompt
+- Always accessible but never intrusive
 
-For issues and feature requests, please contact the development team.
+---
+
+## Who This Is For
+
+✓ **Bolt.new beginners** who want to start with confidence and learn what good prompts look like.
+
+✓ **Busy developers** who don't have time to craft perfect prompts from scratch.
+
+✓ **Non-technical founders** building MVPs without a technical co-founder.
+
+✓ **Designers and creatives** who know what they want visually but struggle to communicate it to AI.
+
+✓ **Anyone who's ever stared at that empty bolt.new prompt box** and thought, *"Where do I even start?"*
+
+---
+
+## Get Started in Seconds
+
+1. Install the extension
+2. Visit bolt.new
+3. Click the "Generate First Prompt" button
+4. Answer the guided questions
+5. Copy your professional prompt
+6. Watch bolt.new build your vision
+
+Your first prompt doesn't have to be perfect. But it should be structured. Let this extension handle the structure so you can focus on your idea.
+
+**Stop wasting time on vague prompts. Start building what you actually envision.**
