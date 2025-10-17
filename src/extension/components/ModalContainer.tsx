@@ -1,13 +1,14 @@
-// Main modal container that orchestrates the entire flow
+// Main modal container that orchestrates the entire flow with 6-step questionnaire
 
 import React, { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { AuthForm } from './AuthForm';
 import { Step1ProjectType } from './Step1ProjectType';
 import { Step2Audience } from './Step2Audience';
-import { Step3Features } from './Step3Features';
-import { Step4Adaptive } from './Step4Adaptive';
-import { Step5Design } from './Step5Design';
+import { Step3PainPoints } from './Step3PainPoints';
+import { Step4Description } from './Step4Description';
+import { Step5Adaptive } from './Step5Adaptive';
+import { Step6Design } from './Step6Design';
 import { PromptPreview } from './PromptPreview';
 import { apiClient } from '../api';
 import { User, QuestionnaireData, Step } from '../types';
@@ -29,8 +30,8 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
     projectType: '',
     customProjectType: '',
     targetAudience: '',
-    customAudience: '',
-    coreFeatures: ['', ''],
+    painPoints: '',
+    projectDescription: '',
     adaptiveAnswers: {},
     designPreferences: {
       style: '',
@@ -82,8 +83,8 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
       projectType: '',
       customProjectType: '',
       targetAudience: '',
-      customAudience: '',
-      coreFeatures: ['', ''],
+      painPoints: '',
+      projectDescription: '',
       adaptiveAnswers: {},
       designPreferences: {
         style: '',
@@ -98,17 +99,17 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
   const renderProgressBar = () => {
     if (currentStep === 'preview') return null;
 
-    const progress = (currentStep / 5) * 100;
+    const progress = (currentStep / 6) * 100;
 
     return (
       <div className="px-8 pt-6 pb-4">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-sm text-gray-400">Step {currentStep} of 5</span>
+          <span className="text-sm text-gray-400">Step {currentStep} of 6</span>
           <span className="text-sm text-gray-400">{Math.round(progress)}%</span>
         </div>
-        <div className="w-full bg-slate-800 rounded-full h-2">
+        <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
           <div
-            className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+            className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -150,7 +151,7 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
           prompt={generatedPrompt}
           generationId={generationId}
           questionnaireData={questionnaireData}
-          onBack={() => setCurrentStep(5)}
+          onBack={() => setCurrentStep(6)}
           onRegenerate={(newPrompt) => setGeneratedPrompt(newPrompt)}
           onReset={handleReset}
         />
@@ -176,13 +177,9 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
       case 2:
         return (
           <Step2Audience
-            selectedAudience={questionnaireData.targetAudience}
-            customAudience={questionnaireData.customAudience || ''}
-            onSelectAudience={(audience) =>
+            targetAudience={questionnaireData.targetAudience}
+            onAudienceChange={(audience) =>
               setQuestionnaireData({ ...questionnaireData, targetAudience: audience })
-            }
-            onCustomAudienceChange={(value) =>
-              setQuestionnaireData({ ...questionnaireData, customAudience: value })
             }
             onNext={() => setCurrentStep(3)}
             onBack={() => setCurrentStep(1)}
@@ -191,10 +188,10 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
 
       case 3:
         return (
-          <Step3Features
-            features={questionnaireData.coreFeatures}
-            onUpdateFeatures={(features) =>
-              setQuestionnaireData({ ...questionnaireData, coreFeatures: features })
+          <Step3PainPoints
+            painPoints={questionnaireData.painPoints}
+            onPainPointsChange={(painPoints) =>
+              setQuestionnaireData({ ...questionnaireData, painPoints })
             }
             onNext={() => setCurrentStep(4)}
             onBack={() => setCurrentStep(2)}
@@ -203,11 +200,10 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
 
       case 4:
         return (
-          <Step4Adaptive
-            projectType={questionnaireData.projectType}
-            adaptiveAnswers={questionnaireData.adaptiveAnswers}
-            onUpdateAnswers={(answers) =>
-              setQuestionnaireData({ ...questionnaireData, adaptiveAnswers: answers })
+          <Step4Description
+            projectDescription={questionnaireData.projectDescription}
+            onDescriptionChange={(description) =>
+              setQuestionnaireData({ ...questionnaireData, projectDescription: description })
             }
             onNext={() => setCurrentStep(5)}
             onBack={() => setCurrentStep(3)}
@@ -216,7 +212,20 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
 
       case 5:
         return (
-          <Step5Design
+          <Step5Adaptive
+            projectType={questionnaireData.projectType}
+            adaptiveAnswers={questionnaireData.adaptiveAnswers}
+            onUpdateAnswers={(answers) =>
+              setQuestionnaireData({ ...questionnaireData, adaptiveAnswers: answers })
+            }
+            onNext={() => setCurrentStep(6)}
+            onBack={() => setCurrentStep(4)}
+          />
+        );
+
+      case 6:
+        return (
+          <Step6Design
             selectedStyle={questionnaireData.designPreferences.style}
             colors={questionnaireData.designPreferences.colors || ''}
             customStyle={questionnaireData.designPreferences.customStyle || ''}
@@ -239,7 +248,7 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
               })
             }
             onNext={handleGenerate}
-            onBack={() => setCurrentStep(4)}
+            onBack={() => setCurrentStep(5)}
           />
         );
 

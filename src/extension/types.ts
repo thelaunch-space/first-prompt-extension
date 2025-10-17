@@ -15,8 +15,8 @@ export interface QuestionnaireData {
   projectType: string;
   customProjectType?: string;
   targetAudience: string;
-  customAudience?: string;
-  coreFeatures: string[];
+  painPoints: string;
+  projectDescription: string;
   adaptiveAnswers: Record<string, any>;
   designPreferences: {
     style: string;
@@ -30,7 +30,7 @@ export interface GenerateResponse {
   generationId: string;
 }
 
-export type Step = 1 | 2 | 3 | 4 | 5 | 'preview';
+export type Step = 1 | 2 | 3 | 4 | 5 | 6 | 'preview';
 
 export interface ProjectTypeOption {
   value: string;

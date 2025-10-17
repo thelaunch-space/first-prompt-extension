@@ -176,7 +176,7 @@ export const Step5Adaptive: React.FC<Step5Props> = ({
       <div className="mb-6">
         <button
           onClick={() => setShowOptional(!showOptional)}
-          className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
+          className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
           type="button"
         >
           {showOptional ? <ChevronUp size={20} /> : <ChevronDown size={20} />}

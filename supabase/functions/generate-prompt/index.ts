@@ -10,7 +10,8 @@ const corsHeaders = {
 interface GenerateRequest {
   projectType: string;
   targetAudience: string;
-  coreFeatures: string[];
+  painPoints: string;
+  projectDescription: string;
   adaptiveAnswers: Record<string, any>;
   designPreferences: Record<string, any>;
   refinementInstructions?: string;
@@ -66,39 +67,52 @@ Deno.serve(async (req: Request) => {
     const {
       projectType,
       targetAudience,
-      coreFeatures,
+      painPoints,
+      projectDescription,
       adaptiveAnswers,
       designPreferences,
       refinementInstructions,
     }: GenerateRequest = await req.json();
+
+    // Add specific technical requirements based on project type
+    let technicalRequirements = "";
+    if (projectType === "mobile-app") {
+      technicalRequirements = "\n- CRITICAL: Use Expo framework for mobile development. Mention Expo explicitly in the prompt.";
+    } else if (projectType === "chrome-extension") {
+      technicalRequirements = "\n- CRITICAL: Use Chrome Extension Manifest V3. Include content script patterns and permissions as needed.";
+    }
 
     const metaPrompt = `You are an expert prompt engineer specializing in AI coding tools like Bolt.new. Generate a structured, production-ready first prompt based on the following user requirements.
 
 **User Requirements:**
 - Project Type: ${projectType}
 - Target Audience: ${targetAudience}
-- Core Features: ${coreFeatures.join(", ")}
+- Pain Points: ${painPoints}
+- Solution Description: ${projectDescription}
 - Additional Context: ${JSON.stringify(adaptiveAnswers)}
-- Design Preferences: ${JSON.stringify(designPreferences)}
+- Design Preferences: ${JSON.stringify(designPreferences)}${technicalRequirements}
 ${refinementInstructions ? `\n- Refinement Instructions: ${refinementInstructions}` : ""}
 
 **Instructions for generating the prompt:**
 
 1. Follow the thelaunch.space format with these sections:
    - Objective (2-3 sentences describing what to build)
-   - Target Audience (who will use this)
+   - Target Audience (detailed description based on the provided audience info)
    - Design Principles (visual aesthetic, responsiveness, premium feel)
    - Functional Requirements (user stories in format: "<user_type> should be able to <action> so that <purpose>")
    - Business Logic (if applicable)
 
 2. CRITICAL RULES:
    - Prioritize BREADTH over DEPTH - list many features briefly rather than few features in detail
+   - The pain points provided should directly inform the functional requirements
    - Use clear user story format for all requirements
    - Do NOT over-specify technical implementation details
    - Focus on WHAT to build, not HOW to build it
    - Keep descriptions concise and actionable
    - Include responsive design requirements
-   - Mention use of Tailwind CSS and React
+   - Mention use of Tailwind CSS and React (or Expo for mobile apps)
+   - For mobile apps: Explicitly require Expo framework
+   - For Chrome extensions: Explicitly require Manifest V3 format
 
 3. Structure the output as a clean, well-formatted prompt ready to paste into Bolt.new
 
@@ -108,6 +122,8 @@ ${refinementInstructions ? `\n- Refinement Instructions: ${refinementInstruction
    - Typography approach
    - Spacing and layout principles
    - Mobile-first responsive design
+
+5. Ensure the functional requirements directly address the pain points: ${painPoints}
 
 Generate the prompt now:`;
 
@@ -147,7 +163,8 @@ Generate the prompt now:`;
         user_id: userId,
         project_type: projectType,
         target_audience: targetAudience,
-        core_features: coreFeatures,
+        pain_points: painPoints,
+        project_description: projectDescription,
         adaptive_answers: adaptiveAnswers,
         design_preferences: designPreferences,
         generated_prompt: generatedPrompt,

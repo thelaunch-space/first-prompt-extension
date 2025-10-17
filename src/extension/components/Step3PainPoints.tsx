@@ -1,68 +1,68 @@
-// Step 4: Solution Description - What should the app do to solve the problems
+// Step 3: Pain Points - Identifying target audience problems and frustrations
 
 import React, { useState } from 'react';
-import { Lightbulb } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
-interface Step4Props {
-  projectDescription: string;
-  onDescriptionChange: (description: string) => void;
+interface Step3Props {
+  painPoints: string;
+  onPainPointsChange: (painPoints: string) => void;
   onNext: () => void;
   onBack: () => void;
 }
 
-export const Step4Description: React.FC<Step4Props> = ({
-  projectDescription,
-  onDescriptionChange,
+export const Step3PainPoints: React.FC<Step3Props> = ({
+  painPoints,
+  onPainPointsChange,
   onNext,
   onBack,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
-  const canProceed = projectDescription.trim().length >= 20;
-  const charCount = projectDescription.length;
+  const canProceed = painPoints.trim().length >= 10;
+  const charCount = painPoints.length;
 
   return (
     <div className="p-8">
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 bg-green-500/10 rounded-lg">
-            <Lightbulb className="text-green-400" size={24} />
+          <div className="p-2 bg-orange-500/10 rounded-lg">
+            <AlertCircle className="text-orange-400" size={24} />
           </div>
-          <h2 className="text-2xl font-bold text-white">What should this app do?</h2>
+          <h2 className="text-2xl font-bold text-white">What problems do they face?</h2>
         </div>
-        <p className="text-gray-400">Describe the solution you envision</p>
+        <p className="text-gray-400">Describe the pain points and frustrations</p>
         <p className="text-sm text-gray-500 mt-2">
-          Focus on what users will accomplish, not technical details
+          Be specific about daily frustrations and bottlenecks
         </p>
       </div>
 
       <div className="mb-6 relative">
         <label
           className={`absolute left-4 transition-all duration-300 pointer-events-none ${
-            isFocused || projectDescription
-              ? '-top-2.5 text-xs bg-slate-900 px-2 text-green-400'
+            isFocused || painPoints
+              ? '-top-2.5 text-xs bg-slate-900 px-2 text-orange-400'
               : 'top-3 text-sm text-gray-500'
           }`}
         >
-          Solution Description
+          Pain Points & Frustrations
         </label>
         <textarea
-          value={projectDescription}
-          onChange={(e) => onDescriptionChange(e.target.value)}
+          value={painPoints}
+          onChange={(e) => onPainPointsChange(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          placeholder="E.g., The app should centralize all customer messages in one dashboard, automatically categorize inquiries, send follow-up reminders, generate response templates, and provide analytics showing which channels bring in the most valuable customers."
-          className="w-full px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:shadow-lg focus:shadow-green-500/10 min-h-[160px] resize-none transition-all duration-300"
+          placeholder="E.g., They struggle to manage customer inquiries across multiple channels (email, social media, phone), miss important follow-ups, waste hours on repetitive admin tasks, and can't easily track which marketing efforts bring in customers."
+          className="w-full px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:shadow-lg focus:shadow-orange-500/10 min-h-[140px] resize-none transition-all duration-300"
         />
         <div className={`mt-2 text-xs transition-opacity duration-300 ${charCount > 0 ? 'opacity-100' : 'opacity-0'} ${
           canProceed ? 'text-green-400' : 'text-gray-500'
         }`}>
-          {charCount} characters {canProceed ? '✓' : '(minimum 20)'}
+          {charCount} characters {canProceed ? '✓' : '(minimum 10)'}
         </div>
       </div>
 
       <div className="mb-6 p-4 bg-slate-800/50 border border-slate-700 rounded-xl">
         <p className="text-sm text-gray-400 leading-relaxed">
-          <span className="font-semibold text-gray-300">Tip:</span> Describe the user experience and outcomes. What will users be able to do? What results will they achieve? Think in terms of actions and benefits.
+          <span className="font-semibold text-gray-300">Tip:</span> Think about what keeps your audience up at night. What tasks do they dread? What slows them down? What causes errors or missed opportunities?
         </p>
       </div>
 

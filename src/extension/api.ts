@@ -114,8 +114,9 @@ class ApiClient {
       headers: this.getHeaders(true),
       body: JSON.stringify({
         projectType: data.customProjectType || data.projectType,
-        targetAudience: data.customAudience || data.targetAudience,
-        coreFeatures: data.coreFeatures,
+        targetAudience: data.targetAudience,
+        painPoints: data.painPoints,
+        projectDescription: data.projectDescription,
         adaptiveAnswers: data.adaptiveAnswers,
         designPreferences: data.designPreferences,
         refinementInstructions,
