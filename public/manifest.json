@@ -6,7 +6,7 @@
   "permissions": ["storage"],
   "host_permissions": ["https://bolt.new/*"],
   "action": {
-    "default_title": "Bolt.new Prompt Generator"
+    "default_title": "Build Better with Bolt.new"
   },
   "content_scripts": [
     {
