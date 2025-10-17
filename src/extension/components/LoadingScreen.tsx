@@ -1,10 +1,12 @@
 // Enhanced loading screen with sequential messages and progress animation
+// This component ONLY handles the visual loading animation
+// The parent component controls when loading actually completes
 
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface LoadingScreenProps {
-  onComplete?: () => void;
+  // Removed onComplete - parent controls loading state
 }
 
 const LOADING_MESSAGES = [
@@ -13,21 +15,15 @@ const LOADING_MESSAGES = [
   { text: "Identifying key pain points...", duration: 2000 },
   { text: "Structuring functional requirements...", duration: 2500 },
   { text: "Crafting the perfect prompt...", duration: 3000 },
-  { text: "Almost there...", duration: 2000 },
+  { text: "Finalizing your prompt...", duration: 2000 },
 ];
 
-export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
+export const LoadingScreen: React.FC<LoadingScreenProps> = () => {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    if (currentMessageIndex >= LOADING_MESSAGES.length) {
-      if (onComplete) {
-        onComplete();
-      }
-      return;
-    }
-
+    // Loop through messages continuously until parent dismisses
     const currentMessage = LOADING_MESSAGES[currentMessageIndex];
     const progressIncrement = 100 / LOADING_MESSAGES.length;
 
@@ -40,14 +36,21 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
     }, 50);
 
     const messageTimer = setTimeout(() => {
-      setCurrentMessageIndex((prev) => prev + 1);
+      setCurrentMessageIndex((prev) => {
+        // Loop back to first message if we've shown all
+        if (prev >= LOADING_MESSAGES.length - 1) {
+          setProgress(0);
+          return 0;
+        }
+        return prev + 1;
+      });
     }, currentMessage.duration);
 
     return () => {
       clearTimeout(messageTimer);
       clearInterval(progressInterval);
     };
-  }, [currentMessageIndex, onComplete]);
+  }, [currentMessageIndex]);
 
   return (
     <div className="p-8 flex flex-col items-center justify-center min-h-[500px]">

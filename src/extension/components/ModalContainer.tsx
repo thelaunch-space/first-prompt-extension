@@ -68,15 +68,27 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
     setError('');
 
     try {
-      const generatePromise = apiClient.generatePrompt(questionnaireData);
+      // Start timing for minimum display duration
+      const startTime = Date.now();
+      const minLoadingTime = 13500; // 13.5 seconds
 
-      const minLoadingTime = new Promise(resolve => setTimeout(resolve, 13500));
+      // Make the actual API call
+      const response = await apiClient.generatePrompt(questionnaireData);
 
-      const [response] = await Promise.all([generatePromise, minLoadingTime]);
+      // Calculate how much time has elapsed
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = minLoadingTime - elapsedTime;
 
+      // If we need to wait longer to meet minimum display time, do so
+      if (remainingTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+      }
+
+      // Now we can safely show the results
       setGeneratedPrompt(response.prompt);
       setGenerationId(response.generationId);
       setCurrentStep('preview');
+      setIsGenerating(false);
     } catch (err: any) {
       handleError(err.message || 'Failed to generate prompt');
       setIsGenerating(false);
@@ -137,13 +149,7 @@ export const ModalContainer: React.FC<ModalContainerProps> = ({ onClose }) => {
     }
 
     if (isGenerating) {
-      return (
-        <LoadingScreen
-          onComplete={() => {
-            setIsGenerating(false);
-          }}
-        />
-      );
+      return <LoadingScreen />;
     }
 
     if (currentStep === 'preview') {
