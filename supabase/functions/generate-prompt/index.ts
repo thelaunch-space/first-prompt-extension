@@ -104,6 +104,7 @@ ${refinementInstructions ? `\n- Refinement Instructions: ${refinementInstruction
 
 2. CRITICAL RULES:
    - Prioritize BREADTH over DEPTH - list many features briefly rather than few features in detail
+   - Make sure that you think deep, think step by step, and cover all possible functional requirements in the specified format, which are needed, to solve the pain point of the target audience
    - The pain points provided should directly inform the functional requirements
    - Use clear user story format for all requirements
    - Do NOT over-specify technical implementation details
@@ -113,6 +114,9 @@ ${refinementInstructions ? `\n- Refinement Instructions: ${refinementInstruction
    - Mention use of Tailwind CSS and React (or Expo for mobile apps)
    - For mobile apps: Explicitly require Expo framework
    - For Chrome extensions: Explicitly require Manifest V3 format
+   - ONLY generate the sections specified in the format above (Objective, Target Audience, Design Principles, Functional Requirements, Business Logic)
+   - Do NOT add extra sections like implementation timelines, technical stack details, deployment instructions, or anything else beyond the required format
+   - These extra sections are NOT relevant for the first prompt for Bolt.new
 
 3. Structure the output as a clean, well-formatted prompt ready to paste into Bolt.new
 
@@ -138,7 +142,7 @@ Generate the prompt now:`;
           "X-Title": "Bolt.new Prompt Generator",
         },
         body: JSON.stringify({
-          model: "anthropic/claude-3.5-sonnet",
+          model: "anthropic/claude-haiku-4.5",
           messages: [
             {
               role: "user",

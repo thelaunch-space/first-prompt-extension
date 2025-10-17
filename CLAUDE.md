@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Chrome extension that injects into bolt.new pages to help users generate optimized first prompts through a guided 6-step questionnaire. The extension uses React for UI, Supabase for backend/database, and OpenRouter (Claude 3.5 Sonnet) for AI-powered prompt generation.
+Chrome extension that injects into bolt.new pages to help users generate optimized first prompts through a guided 6-step questionnaire. The extension uses React for UI, Supabase for backend/database, and OpenRouter (Claude Haiku 4.5) for AI-powered prompt generation.
 
 ## Essential Commands
 
@@ -93,7 +93,9 @@ content.tsx (BoltPromptGenerator)
 - `supabase/functions/generate-prompt/index.ts`: AI prompt generation via OpenRouter
   - Constructs meta-prompt following thelaunch.space format
   - Injects project-specific technical requirements (Expo for mobile, Manifest V3 for extensions)
-  - Uses `anthropic/claude-3.5-sonnet` model
+  - Uses `anthropic/claude-haiku-4.5` model (67% cheaper than Sonnet, 2x faster)
+  - Enforces step-by-step thinking for comprehensive requirements coverage
+  - Prevents AI from generating extra sections beyond required format
 - `supabase/functions/track-usage/index.ts`: Usage tracking (edited, copied)
 
 ### Database Schema
@@ -177,7 +179,10 @@ type Step = 1 | 2 | 3 | 4 | 5 | 6 | 'preview';
 5. Edge function:
    - Constructs meta-prompt following thelaunch.space format
    - Adds project-specific technical requirements (Expo for mobile, Manifest V3 for extensions)
-   - Calls OpenRouter API with Claude 3.5 Sonnet
+   - Calls OpenRouter API with Claude Haiku 4.5
+   - Uses all collected user data: project type, audience, pain points, description, adaptive answers, design preferences
+   - Enforces step-by-step thinking and comprehensive coverage of functional requirements
+   - Restricts output to only required sections (no implementation timelines or extra details)
    - Saves generation to database with generation ID
 6. When API responds:
    - `ModalContainer` signals completion to `LoadingScreen` via `onComplete` prop
@@ -197,12 +202,15 @@ The AI generates prompts with these sections:
 
 Critical rules enforced:
 - Prioritize BREADTH over DEPTH
+- Think deep, think step by step, cover all possible functional requirements needed to solve pain points
 - Focus on WHAT, not HOW
 - Use clear user story format
 - Include responsive design requirements
 - Mention Tailwind CSS and React (or Expo for mobile apps)
 - For mobile apps: Explicitly require Expo framework
 - For Chrome extensions: Explicitly require Manifest V3 format
+- ONLY generate required sections (Objective, Target Audience, Design Principles, Functional Requirements, Business Logic)
+- Do NOT add implementation timelines, technical stack details, or other irrelevant sections
 
 ### Adaptive Questions (Step 5)
 Dynamic questions rendered based on `projectType` selected in Step 1. Each project type has unique questions to gather relevant context:
@@ -297,8 +305,9 @@ The button has two modes that adapt to user context:
 
 ### API Dependencies
 - OpenRouter API requires active key with credits
-- Uses `anthropic/claude-3.5-sonnet` model
-- Cost: ~$0.01-0.03 per prompt generation
+- Uses `anthropic/claude-haiku-4.5` model
+- Cost: ~$0.003-0.01 per prompt generation (67% cheaper than Sonnet)
+- Response time: 2x faster than Claude 3.5 Sonnet
 - Supabase project must be active with edge functions enabled
 
 ## Common Tasks
