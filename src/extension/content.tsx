@@ -56,9 +56,17 @@ class BoltPromptGenerator {
     });
 
     this.checkForPromptInput();
+    this.checkUrlForProject();
   }
 
   private checkForPromptInput() {
+    if (this.hasActiveProject()) {
+      if (this.buttonMode === 'full') {
+        this.transformToCompact();
+      }
+      return;
+    }
+
     const textarea = document.querySelector('textarea[placeholder*="prompt" i], textarea[placeholder*="describe" i], textarea');
 
     if (textarea instanceof HTMLTextAreaElement) {
@@ -72,7 +80,7 @@ class BoltPromptGenerator {
           (ta) => (ta as HTMLTextAreaElement).value.trim().length > 0
         );
 
-        if (!anyHasContent) {
+        if (!anyHasContent && !this.hasActiveProject()) {
           this.transformToFull();
         }
       }
@@ -171,6 +179,22 @@ class BoltPromptGenerator {
     this.button.style.left = '-40px';
     this.button.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.25)';
   };
+
+  private hasActiveProject(): boolean {
+    const url = window.location.href;
+    return url.includes('bolt.new/~/');
+  }
+
+  private checkUrlForProject() {
+    if (this.hasActiveProject() && this.buttonMode === 'full') {
+      this.transformToCompact();
+    } else if (!this.hasActiveProject() && this.buttonMode === 'compact') {
+      const textarea = document.querySelector('textarea');
+      if (textarea instanceof HTMLTextAreaElement && !textarea.value.trim()) {
+        this.transformToFull();
+      }
+    }
+  }
 
 
   private injectButton() {
@@ -286,3 +310,21 @@ generator.init();
 window.addEventListener('popstate', () => {
   generator.init();
 });
+
+window.addEventListener('pushstate', () => {
+  setTimeout(() => {
+    const generator = new BoltPromptGenerator();
+    generator.init();
+  }, 100);
+});
+
+let lastUrl = location.href;
+new MutationObserver(() => {
+  const url = location.href;
+  if (url !== lastUrl) {
+    lastUrl = url;
+    setTimeout(() => {
+      generator.init();
+    }, 100);
+  }
+}).observe(document, {subtree: true, childList: true});
